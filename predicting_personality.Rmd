@@ -21,10 +21,26 @@ knitr::opts_chunk$set(echo = TRUE,
 library(tidyverse)
 library(tidymodels)
 library(readxl)
+library(janitor)
+library(kableExtra)
 tidymodels_prefer()
 
 set.seed(123) # set seed
 ```
 
+```{r}
+data1 <- 
+  read_xls('C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/Posture_Data.xls') %>% 
+  clean_names()
+
+data1 %>% write.csv(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/raw_data.csv')
+
+data1 <- 
+  data1 %>% 
+  select(-number_1 & -mbti & -(number_21:l45)) %>% 
+  mutate(sex = factor(sex)) %>% 
+  mutate(activity_level = ordered(activity_level,
+                                  levels = c('Low', 'Medium', 'High')))
+```
 
 
