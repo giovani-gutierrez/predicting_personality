@@ -13,3 +13,18 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE,
                       tidy = TRUE)
 ```
+
+# Getting Started
+
+## Setup
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(readxl)
+tidymodels_prefer()
+
+set.seed(123) # set seed
+```
+
+
+
