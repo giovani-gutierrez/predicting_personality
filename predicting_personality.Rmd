@@ -49,7 +49,7 @@ data1 %>%
 head(data1) # preview data
 ```
 
-## Tidy Data & Mising Values
+## Tidy Data & Missing Values
 ```{r missing values, fig.width = 10}
 data1 <- 
   data1 %>% 
