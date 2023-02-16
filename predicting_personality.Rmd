@@ -32,6 +32,7 @@ library(readxl)
 library(janitor)
 library(visdat)
 library(naniar)
+library(corrplot)
 tidymodels_prefer()
 
 set.seed(123) # set seed
@@ -80,4 +81,13 @@ data1 %>%
 
 data1 %>% 
   write.csv(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/clean_data.csv') # write clean data to .csv file
+
+head(data1) # preview cleaned data
 ```
+
+*Describe variables here!*
+
+# Exploratory Data Analysis (EDA)
+
+## Correlation Between Features
+
