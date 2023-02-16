@@ -24,12 +24,12 @@ set.seed(123)  # set seed
 
 ``` r
 data1 <- read_xls("C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/Posture_Data.xls") %>%
-    clean_names()
+    clean_names()  # read in raw data from .xls file
 
 data1 %>%
-    write.csv(file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/raw_data.csv")
+    write.csv(file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/raw_data.csv")  # write raw data to .csv file
 
-head(data1)
+head(data1)  # preview data
 ```
 
     ## # A tibble: 6 × 66
@@ -51,18 +51,18 @@ head(data1)
 
 ``` r
 data1 <- data1 %>%
-    replace_with_na_all(condition = ~.x == "X")
+    replace_with_na_all(condition = ~.x == "X")  # replace 'X' character values with NA values
 
 data1 %>%
-    vis_miss()
+    vis_miss()  # visualize missing values
 ```
 
-![](predicting_personality_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+<img src="predicting_personality_files/figure-gfm/unnamed-chunk-3-1.png" style="display: block; margin: auto auto auto 0;" />
 
 ``` r
 data1 <- data1 %>%
     select(age:posture & -mbti) %>%
-    drop_na()
+    drop_na()  # drop missing and irrelevant variables
 
 data1 <- data1 %>%
     mutate(sex = factor(sex)) %>%
@@ -72,15 +72,15 @@ data1 <- data1 %>%
     mutate(e_i = factor(ifelse(e > i, "extrovert", "introvert"))) %>%
     mutate_at(c("s", "n", "t", "f", "j", "p"), as.numeric) %>%
     mutate(posture = factor(posture)) %>%
-    select(-e & -i)
+    select(-e & -i)  # coerce variables into appropriate type
 
 data1 %>%
-    vis_dat()
+    vis_dat()  # visualize variable types
 ```
 
-![](predicting_personality_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+<img src="predicting_personality_files/figure-gfm/unnamed-chunk-3-2.png" style="display: block; margin: auto auto auto 0;" />
 
 ``` r
 data1 %>%
-    write.csv(file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/clean_data.csv")
+    write.csv(file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/clean_data.csv")  # write clean data to .csv file
 ```
