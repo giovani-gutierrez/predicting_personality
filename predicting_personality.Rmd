@@ -5,8 +5,6 @@ date: "2023-02-15"
 output: 
   github_document:
     toc: true
-    fig_width: 7
-    fig_height: 5
 
 ---
 
@@ -14,7 +12,12 @@ output:
 knitr::opts_chunk$set(echo = TRUE, 
                       warning = FALSE, 
                       message = FALSE,
-                      tidy = TRUE)
+                      tidy = TRUE,
+                      fig.align = TRUE)
+
+indent1 = '    '
+indent2 = paste(rep(indent1, 2), collapse='')
+indent3 = paste(rep(indent1, 3), collapse='')
 ```
 
 # Getting Started
@@ -32,29 +35,29 @@ tidymodels_prefer()
 set.seed(123) # set seed
 ```
 
-```{r figure.width = 12}
-data1 <- 
-  read_xls('C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/Posture_Data.xls') %>% 
-  clean_names()
-
-data1 %>% 
-  write.csv(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/raw_data.csv')
-
-head(data1)
-```
-
 ```{r}
 data1 <- 
-  data1 %>% 
-  replace_with_na_all(condition = ~.x == 'X')
+  read_xls('C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/Posture_Data.xls') %>% 
+  clean_names() # read in raw data from .xls file
 
 data1 %>% 
-  vis_miss()
+  write.csv(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/raw_data.csv') # write raw data to .csv file
+
+head(data1) # preview data
+```
+
+```{r, fig.width = 10}
+data1 <- 
+  data1 %>% 
+  replace_with_na_all(condition = ~.x == 'X') # replace 'X' character values with NA values
+
+data1 %>% 
+  vis_miss() # visualize missing values
 
 data1 <- 
   data1 %>% 
   select(age:posture & -mbti) %>% 
-  drop_na()
+  drop_na() # drop missing and irrelevant variables
 
 data1 <- 
   data1 %>% 
@@ -66,10 +69,11 @@ data1 <-
   mutate(e_i = factor(ifelse(e > i, 'extrovert', 'introvert'))) %>% 
   mutate_at(c('s', 'n', 't', 'f', 'j', 'p'), as.numeric) %>% 
   mutate(posture = factor(posture)) %>% 
-  select(-e & -i)
-
-data1 %>% vis_dat()
+  select(-e & -i) # coerce variables into appropriate type
 
 data1 %>% 
-  write.csv(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/clean_data.csv')
+  vis_dat() # visualize variable types
+
+data1 %>% 
+  write.csv(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/clean_data.csv') # write clean data to .csv file
 ```
