@@ -6,8 +6,14 @@ Giovani Gutierrez
 - <a href="#getting-started" id="toc-getting-started">Getting Started</a>
   - <a href="#setup" id="toc-setup">Setup</a>
   - <a href="#import-data" id="toc-import-data">Import Data</a>
-  - <a href="#tidy-data--mising-values"
-    id="toc-tidy-data--mising-values">Tidy Data &amp; Mising Values</a>
+  - <a href="#tidy-data--missing-values"
+    id="toc-tidy-data--missing-values">Tidy Data &amp; Missing Values</a>
+- <a href="#exploratory-data-analysis-eda"
+  id="toc-exploratory-data-analysis-eda">Exploratory Data Analysis
+  (EDA)</a>
+  - <a href="#correlation-between-features"
+    id="toc-correlation-between-features">Correlation Between Features</a>
+  - <a href="#visual-eda" id="toc-visual-eda">Visual EDA</a>
 
 # Getting Started
 
@@ -20,6 +26,7 @@ library(readxl)
 library(janitor)
 library(visdat)
 library(naniar)
+library(corrplot)
 tidymodels_prefer()
 
 set.seed(123)  # set seed
@@ -50,7 +57,7 @@ head(data1)  # preview data
 
 </div>
 
-## Tidy Data & Mising Values
+## Tidy Data & Missing Values
 
 ``` r
 data1 <- data1 %>%
@@ -86,4 +93,54 @@ data1 %>%
 ``` r
 data1 %>%
     write.csv(file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/clean_data.csv")  # write clean data to .csv file
+
+head(data1)  # preview cleaned data
 ```
+
+<div class="kable-table">
+
+| age | height | weight | sex    | activity_level | pain_1 | pain_2 | pain_3 | pain_4 |   s |   n |   t |   f |   j |   p | posture | e_i       |
+|----:|-------:|-------:|:-------|:---------------|-------:|-------:|-------:|-------:|----:|----:|----:|----:|----:|----:|:--------|:----------|
+|  53 |     62 |    125 | Female | Low            |      0 |      0 |      0 |      0 |  17 |   9 |   9 |  13 |  18 |   4 | A       | introvert |
+|  30 |     69 |    200 | Male   | High           |      0 |      0 |      0 |      0 |  16 |  10 |  15 |   9 |  12 |  10 | A       | introvert |
+|  45 |     63 |    199 | Female | Moderate       |      4 |      5 |      2 |      2 |  20 |   6 |   9 |  15 |  16 |   6 | A       | introvert |
+|  30 |     69 |    190 | Male   | Moderate       |      0 |      0 |      4 |      7 |  22 |   4 |  13 |  11 |   7 |  15 | A       | extrovert |
+|  59 |     66 |    138 | Female | Low            |      6 |      3 |      6 |      6 |  18 |   8 |  14 |  10 |  20 |   2 | A       | introvert |
+|  36 |     68 |    165 | Male   | High           |      0 |      2 |      0 |      0 |  20 |   6 |  15 |   9 |   7 |  15 | A       | introvert |
+
+</div>
+
+*Describe variables here!*
+
+# Exploratory Data Analysis (EDA)
+
+## Correlation Between Features
+
+``` r
+data1 %>%
+    select_if(is.numeric) %>%
+    cor() %>%
+    corrplot(method = "circle", type = "lower")
+```
+
+<img src="predicting_personality_files/figure-gfm/correlation plot-1.png" style="display: block; margin: auto auto auto 0;" />
+
+## Visual EDA
+
+``` r
+ggplot(data = data1, aes(fill = e_i, x = e_i)) + geom_bar()
+```
+
+<img src="predicting_personality_files/figure-gfm/visual eda-1.png" style="display: block; margin: auto auto auto 0;" />
+
+``` r
+ggplot(data = data1, aes(fill = sex, x = e_i)) + geom_bar(position = "fill")
+```
+
+<img src="predicting_personality_files/figure-gfm/visual eda-2.png" style="display: block; margin: auto auto auto 0;" />
+
+``` r
+ggplot(data = data1, aes(fill = posture, x = e_i)) + geom_bar(position = "fill")
+```
+
+<img src="predicting_personality_files/figure-gfm/visual eda-3.png" style="display: block; margin: auto auto auto 0;" />
