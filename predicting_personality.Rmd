@@ -91,3 +91,23 @@ head(data1) # preview cleaned data
 
 ## Correlation Between Features
 
+```{r correlation plot}
+data1 %>% 
+  select_if(is.numeric) %>% 
+  cor() %>% 
+  corrplot(method = 'circle', 
+           type = 'lower')
+```
+
+## Visual EDA
+```{r visual eda}
+ggplot(data = data1, aes(fill = e_i, x = e_i)) + 
+  geom_bar()
+
+ggplot(data = data1, aes(fill = sex, x = e_i)) + 
+  geom_bar(position = "fill")
+
+ggplot(data = data1, aes(fill = posture, x = e_i)) + 
+  geom_bar(position = "fill")
+```
+
