@@ -67,7 +67,7 @@ data1 %>%
     vis_miss()  # visualize missing values
 ```
 
-<img src="predicting_personality_files/figure-gfm/missing values-1.png" style="display: block; margin: auto auto auto 0;" />
+<img src="predicting_personality_files/figure-gfm/missing values-1.png" style="display: block; margin: auto;" />
 
 ``` r
 data1 <- data1 %>%
@@ -88,7 +88,7 @@ data1 %>%
     vis_dat()  # visualize variable types
 ```
 
-<img src="predicting_personality_files/figure-gfm/missing values-2.png" style="display: block; margin: auto auto auto 0;" />
+<img src="predicting_personality_files/figure-gfm/missing values-2.png" style="display: block; margin: auto;" />
 
 ``` r
 data1 %>%
@@ -123,7 +123,7 @@ data1 %>%
     corrplot(method = "circle", type = "lower")
 ```
 
-<img src="predicting_personality_files/figure-gfm/correlation plot-1.png" style="display: block; margin: auto auto auto 0;" />
+<img src="predicting_personality_files/figure-gfm/correlation plot-1.png" style="display: block; margin: auto;" />
 
 ## Visual EDA
 
@@ -131,16 +131,16 @@ data1 %>%
 ggplot(data = data1, aes(fill = e_i, x = e_i)) + geom_bar()
 ```
 
-<img src="predicting_personality_files/figure-gfm/visual eda-1.png" style="display: block; margin: auto auto auto 0;" />
+<img src="predicting_personality_files/figure-gfm/visual eda-1.png" style="display: block; margin: auto;" />
 
 ``` r
 ggplot(data = data1, aes(fill = sex, x = e_i)) + geom_bar(position = "fill")
 ```
 
-<img src="predicting_personality_files/figure-gfm/visual eda-2.png" style="display: block; margin: auto auto auto 0;" />
+<img src="predicting_personality_files/figure-gfm/visual eda-2.png" style="display: block; margin: auto;" />
 
 ``` r
 ggplot(data = data1, aes(fill = posture, x = e_i)) + geom_bar(position = "fill")
 ```
 
-<img src="predicting_personality_files/figure-gfm/visual eda-3.png" style="display: block; margin: auto auto auto 0;" />
+<img src="predicting_personality_files/figure-gfm/visual eda-3.png" style="display: block; margin: auto;" />
