@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       warning = FALSE, 
                       message = FALSE,
                       tidy = TRUE,
-                      fig.align = TRUE)
+                      fig.align = 'center')
 
 indent1 = '    '
 indent2 = paste(rep(indent1, 2), collapse='')
