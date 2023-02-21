@@ -85,7 +85,24 @@ data1 %>%
 head(data1) # preview cleaned data
 ```
 
-*Describe variables here!*
+* `age`: Age of participant (in years)
+* `height`: Height of participant (in inches)
+* `weight`: Weight of participant (in pounds)
+* `sex`: Sex of the participant (male or female)
+* `activity_level`: Amount of daily physical activity performed by a participant (low, moderate, or high)
+* `pain_1`: Pain in the neck reported on a scale from 0 (low) to 10 (high) by a participant
+* `pain_2`: Pain in the thoracic reported on a scale from 0 (low) to 10 (high) by a participant
+* `pain_3`: Pain in the lumbar reported on a scale from 0 (low) to 10 (high) by the participant
+* `pain_4`: Pain in the sacrum reported on a scale from 0 (low) to 10 (high) by the participant
+* `s`: A participant's sensing characteristic on a scale from 1 (low) to 26 (high)
+* `i`: A participant's intuition characteristic on a scale from 1 (low) to 26 (high)
+* `t`: A participant's thinking characteristic on a scale from 1 (low) to 26 (high)
+* `f`: A participant's feeling characteristic on a scale from 1 (low) to 26 (high)
+* `j`: A participant's judging characteristic on a scale from 1 (low) to 26 (high)
+* `p`: A participant's perceiving characteristic on a scale from 1 (low) to 26 (high)
+* `posture`: Type of posture exhibited by a participant (ideal posture (A), kyphosis-lordosis (B), flat-back (C), and sway-back (D))
+* `e_i`: Categorization of participant as an extrovert or introvert; based on whichever score was higher on their MBTI questionnaire
+
 
 # Exploratory Data Analysis (EDA)
 
