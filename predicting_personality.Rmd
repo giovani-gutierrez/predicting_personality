@@ -126,5 +126,28 @@ ggplot(data = data1, aes(fill = sex, x = e_i)) +
 
 ggplot(data = data1, aes(fill = posture, x = e_i)) + 
   geom_bar(position = "fill")
+
+ggplot(data = data1, aes(fill = activity_level, x = posture)) + 
+  geom_bar(position = 'fill', colour = 'black') +
+  labs(x = 'Posture Type', fill = 'Activity Level') +
+  facet_grid(. ~ e_i) +
+  scale_fill_brewer(palette = "Pastel1")
+
+ggplot(data = data.frame(data1, transmute(data1, s_n = factor(ifelse(s > n, 'sensing', 'inuitive')))), aes(x = e_i, fill = s_n)) + 
+  geom_bar(position = 'fill', colour = 'black') +
+  scale_fill_brewer(palette = "Pastel1")
+
+ggplot(data = data.frame(data1, transmute(data1, t_f = factor(ifelse(t > f, 'thinking', 'feeling')))), aes(x = e_i, fill = t_f)) + 
+  geom_bar(position = 'fill', colour = 'black')  +
+  scale_fill_brewer(palette = "Pastel1")
+
+ggplot(data = data.frame(data1, transmute(data1, j_p = factor(ifelse(j > p, 'judging', 'perceiving')))), aes(x = e_i, fill = j_p)) + 
+  geom_bar(position = 'fill', color = 'black') +
+  scale_fill_brewer(palette = "Pastel1")
+
+ggplot(data = data1, aes(x = posture, y = pain_1, fill = posture)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = 'Pastel1')
+  
 ```
 
