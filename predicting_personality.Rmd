@@ -34,6 +34,7 @@ library(visdat)
 library(naniar)
 library(corrplot)
 tidymodels_prefer()
+theme_set(theme_bw())
 
 set.seed(123) # set seed
 ```
@@ -146,7 +147,7 @@ ggplot(data = data.frame(data1, transmute(data1, j_p = factor(ifelse(j > p, 'jud
   scale_fill_brewer(palette = "Pastel1")
 
 ggplot(data = data1, aes(x = posture, y = pain_1, fill = posture)) +
-  geom_boxplot() +
+  geom_boxplot(color = 'black') +
   scale_fill_brewer(palette = 'Pastel1')
   
 ```
