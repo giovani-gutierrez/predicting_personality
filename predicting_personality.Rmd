@@ -73,7 +73,7 @@ data1 <-
                                   levels = c('Low', 'Moderate', 'High'))) %>% 
   mutate_at(c('pain_1', 'pain_2', 'pain_3', 'pain_4'), 
             as.numeric) %>% 
-  mutate(e_i = factor(ifelse(e > i, 'extrovert', 'introvert'))) %>% 
+  mutate(e_i = factor(ifelse(e > i, 'Extrovert', 'Introvert'))) %>% 
   mutate_at(c('s', 'n', 't', 'f', 'j', 'p'), as.numeric) %>% 
   mutate(posture = factor(posture)) %>% 
   select(-e & -i) # coerce variables into appropriate type
@@ -122,31 +122,42 @@ data1 %>%
 ## Visual EDA
 ```{r visual eda}
 ggplot(data = data1, aes(fill = e_i, x = e_i)) + 
-  geom_bar()
+  geom_bar(colour = 'black') +
+  scale_fill_brewer(palette = "Pastel1") +
+  guides(fill = FALSE) +
+  labs(x = NULL, y = 'Number of Participants')
 
 ggplot(data = data1, aes(fill = sex, x = e_i)) + 
-  geom_bar(position = "fill")
+  geom_bar(position = "fill", colour = 'black') +
+  scale_fill_brewer(palette = "Pastel1") + 
+  labs(x = NULL, y = 'Proportion of Participants', fill = 'Sex')
 
 ggplot(data = data1, aes(fill = posture, x = e_i)) + 
-  geom_bar(position = "fill")
+  geom_bar(position = "fill", colour = 'black') +
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(x = NULL, y = 'Proportion of Participants', fill = 'Posture Type')
 
 ggplot(data = data1, aes(fill = activity_level, x = posture)) + 
   geom_bar(position = 'fill', colour = 'black') +
   labs(x = 'Posture Type', fill = 'Activity Level') +
   facet_grid(. ~ e_i) +
-  scale_fill_brewer(palette = "Pastel1")
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(y = 'Proportion of Participants', fill = 'Activity Level')
 
 ggplot(data = data.frame(data1, transmute(data1, s_n = factor(ifelse(s > n, 'sensing', 'inuitive')))), aes(x = e_i, fill = s_n)) + 
   geom_bar(position = 'fill', colour = 'black') +
-  scale_fill_brewer(palette = "Pastel1")
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(x = '', y = 'Proportion of Participants', fill = NULL)
 
 ggplot(data = data.frame(data1, transmute(data1, t_f = factor(ifelse(t > f, 'thinking', 'feeling')))), aes(x = e_i, fill = t_f)) + 
   geom_bar(position = 'fill', colour = 'black')  +
-  scale_fill_brewer(palette = "Pastel1")
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(x = NULL, y = 'Proportion of Participants', fill = NULL)
 
 ggplot(data = data.frame(data1, transmute(data1, j_p = factor(ifelse(j > p, 'judging', 'perceiving')))), aes(x = e_i, fill = j_p)) + 
   geom_bar(position = 'fill', color = 'black') +
-  scale_fill_brewer(palette = "Pastel1")
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(x = NULL, y = 'Proportion of Participants', fill = NULL)
 ```
 
 ```{r pain-plots}
