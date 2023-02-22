@@ -145,10 +145,35 @@ ggplot(data = data.frame(data1, transmute(data1, t_f = factor(ifelse(t > f, 'thi
 ggplot(data = data.frame(data1, transmute(data1, j_p = factor(ifelse(j > p, 'judging', 'perceiving')))), aes(x = e_i, fill = j_p)) + 
   geom_bar(position = 'fill', color = 'black') +
   scale_fill_brewer(palette = "Pastel1")
+```
 
+```{r, figures-side,echo=FALSE, out.width = '40%'}
 ggplot(data = data1, aes(x = posture, y = pain_1, fill = posture)) +
   geom_boxplot(color = 'black') +
-  scale_fill_brewer(palette = 'Pastel1')
-  
+  stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
+  scale_fill_brewer(palette = 'Pastel1') +
+  labs(x = 'Posture Type', y = 'Level of Neck Pain') +
+  guides(fill = FALSE)
+
+ggplot(data = data1, aes(x = posture, y = pain_2, fill = posture)) +
+  geom_boxplot(color = 'black') +
+  stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
+  scale_fill_brewer(palette = 'Pastel1') +
+  labs(x = 'Posture Type', y = 'Level of Thoracic Pain') +
+  guides(fill = FALSE)
+
+ggplot(data = data1, aes(x = posture, y = pain_3, fill = posture)) +
+  geom_boxplot(color = 'black') +
+  stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
+  scale_fill_brewer(palette = 'Pastel1') +
+  labs(x = 'Posture Type', y = 'Level of Lumbar Pain') +
+  guides(fill = FALSE)
+
+ggplot(data = data1, aes(x = posture, y = pain_4, fill = posture)) +
+  geom_boxplot(color = 'black') +
+  stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
+  scale_fill_brewer(palette = 'Pastel1') +
+  labs(x = 'Posture Type', y = 'Level of Sacral Pain') +
+  guides(fill = FALSE)
 ```
 
