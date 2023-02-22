@@ -33,6 +33,7 @@ library(janitor)
 library(visdat)
 library(naniar)
 library(corrplot)
+library(patchwork)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -114,7 +115,8 @@ data1 %>%
   select_if(is.numeric) %>% 
   cor() %>% 
   corrplot(method = 'circle', 
-           type = 'lower')
+           type = 'lower',
+           diag = FALSE)
 ```
 
 ## Visual EDA
@@ -147,33 +149,39 @@ ggplot(data = data.frame(data1, transmute(data1, j_p = factor(ifelse(j > p, 'jud
   scale_fill_brewer(palette = "Pastel1")
 ```
 
-```{r, figures-side,echo=FALSE, out.width = '40%'}
-ggplot(data = data1, aes(x = posture, y = pain_1, fill = posture)) +
+```{r pain-plots}
+p1 <- 
+  ggplot(data = data1, aes(x = posture, y = pain_1, fill = posture)) +
   geom_boxplot(color = 'black') +
   stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
   scale_fill_brewer(palette = 'Pastel1') +
   labs(x = 'Posture Type', y = 'Level of Neck Pain') +
   guides(fill = FALSE)
 
-ggplot(data = data1, aes(x = posture, y = pain_2, fill = posture)) +
+p2 <-
+  ggplot(data = data1, aes(x = posture, y = pain_2, fill = posture)) +
   geom_boxplot(color = 'black') +
   stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
   scale_fill_brewer(palette = 'Pastel1') +
   labs(x = 'Posture Type', y = 'Level of Thoracic Pain') +
   guides(fill = FALSE)
 
-ggplot(data = data1, aes(x = posture, y = pain_3, fill = posture)) +
+p3 <- 
+  ggplot(data = data1, aes(x = posture, y = pain_3, fill = posture)) +
   geom_boxplot(color = 'black') +
   stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
   scale_fill_brewer(palette = 'Pastel1') +
   labs(x = 'Posture Type', y = 'Level of Lumbar Pain') +
   guides(fill = FALSE)
 
-ggplot(data = data1, aes(x = posture, y = pain_4, fill = posture)) +
+p4 <-
+  ggplot(data = data1, aes(x = posture, y = pain_4, fill = posture)) +
   geom_boxplot(color = 'black') +
   stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
   scale_fill_brewer(palette = 'Pastel1') +
   labs(x = 'Posture Type', y = 'Level of Sacral Pain') +
   guides(fill = FALSE)
+
+p1 + p2 + p3 + p4
 ```
 
