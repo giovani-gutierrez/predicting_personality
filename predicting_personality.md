@@ -27,7 +27,9 @@ library(janitor)
 library(visdat)
 library(naniar)
 library(corrplot)
+library(patchwork)
 tidymodels_prefer()
+theme_set(theme_bw())
 
 set.seed(123)  # set seed
 ```
@@ -79,7 +81,7 @@ data1 <- data1 %>%
     mutate(activity_level = ordered(activity_level, levels = c("Low", "Moderate",
         "High"))) %>%
     mutate_at(c("pain_1", "pain_2", "pain_3", "pain_4"), as.numeric) %>%
-    mutate(e_i = factor(ifelse(e > i, "extrovert", "introvert"))) %>%
+    mutate(e_i = factor(ifelse(e > i, "Extrovert", "Introvert"))) %>%
     mutate_at(c("s", "n", "t", "f", "j", "p"), as.numeric) %>%
     mutate(posture = factor(posture)) %>%
     select(-e & -i)  # coerce variables into appropriate type
@@ -101,16 +103,45 @@ head(data1)  # preview cleaned data
 
 | age | height | weight | sex    | activity_level | pain_1 | pain_2 | pain_3 | pain_4 |   s |   n |   t |   f |   j |   p | posture | e_i       |
 |----:|-------:|-------:|:-------|:---------------|-------:|-------:|-------:|-------:|----:|----:|----:|----:|----:|----:|:--------|:----------|
-|  53 |     62 |    125 | Female | Low            |      0 |      0 |      0 |      0 |  17 |   9 |   9 |  13 |  18 |   4 | A       | introvert |
-|  30 |     69 |    200 | Male   | High           |      0 |      0 |      0 |      0 |  16 |  10 |  15 |   9 |  12 |  10 | A       | introvert |
-|  45 |     63 |    199 | Female | Moderate       |      4 |      5 |      2 |      2 |  20 |   6 |   9 |  15 |  16 |   6 | A       | introvert |
-|  30 |     69 |    190 | Male   | Moderate       |      0 |      0 |      4 |      7 |  22 |   4 |  13 |  11 |   7 |  15 | A       | extrovert |
-|  59 |     66 |    138 | Female | Low            |      6 |      3 |      6 |      6 |  18 |   8 |  14 |  10 |  20 |   2 | A       | introvert |
-|  36 |     68 |    165 | Male   | High           |      0 |      2 |      0 |      0 |  20 |   6 |  15 |   9 |   7 |  15 | A       | introvert |
+|  53 |     62 |    125 | Female | Low            |      0 |      0 |      0 |      0 |  17 |   9 |   9 |  13 |  18 |   4 | A       | Introvert |
+|  30 |     69 |    200 | Male   | High           |      0 |      0 |      0 |      0 |  16 |  10 |  15 |   9 |  12 |  10 | A       | Introvert |
+|  45 |     63 |    199 | Female | Moderate       |      4 |      5 |      2 |      2 |  20 |   6 |   9 |  15 |  16 |   6 | A       | Introvert |
+|  30 |     69 |    190 | Male   | Moderate       |      0 |      0 |      4 |      7 |  22 |   4 |  13 |  11 |   7 |  15 | A       | Extrovert |
+|  59 |     66 |    138 | Female | Low            |      6 |      3 |      6 |      6 |  18 |   8 |  14 |  10 |  20 |   2 | A       | Introvert |
+|  36 |     68 |    165 | Male   | High           |      0 |      2 |      0 |      0 |  20 |   6 |  15 |   9 |   7 |  15 | A       | Introvert |
 
 </div>
 
-*Describe variables here!*
+- `age`: Age of participant (in years)
+- `height`: Height of participant (in inches)
+- `weight`: Weight of participant (in pounds)
+- `sex`: Sex of the participant (male or female)
+- `activity_level`: Amount of daily physical activity performed by a
+  participant (low, moderate, or high)
+- `pain_1`: Pain in the neck reported on a scale from 0 (low) to 10
+  (high) by a participant
+- `pain_2`: Pain in the thoracic reported on a scale from 0 (low) to 10
+  (high) by a participant
+- `pain_3`: Pain in the lumbar reported on a scale from 0 (low) to 10
+  (high) by the participant
+- `pain_4`: Pain in the sacrum reported on a scale from 0 (low) to 10
+  (high) by the participant
+- `s`: A participant’s sensing characteristic on a scale from 1 (low) to
+  26 (high)
+- `i`: A participant’s intuition characteristic on a scale from 1 (low)
+  to 26 (high)
+- `t`: A participant’s thinking characteristic on a scale from 1 (low)
+  to 26 (high)
+- `f`: A participant’s feeling characteristic on a scale from 1 (low) to
+  26 (high)
+- `j`: A participant’s judging characteristic on a scale from 1 (low) to
+  26 (high)
+- `p`: A participant’s perceiving characteristic on a scale from 1 (low)
+  to 26 (high)
+- `posture`: Type of posture exhibited by a participant (ideal posture
+  (A), kyphosis-lordosis (B), flat-back (C), and sway-back (D))
+- `e_i`: Categorization of participant as an extrovert or introvert;
+  based on whichever score was higher on their MBTI questionnaire
 
 # Exploratory Data Analysis (EDA)
 
@@ -120,7 +151,7 @@ head(data1)  # preview cleaned data
 data1 %>%
     select_if(is.numeric) %>%
     cor() %>%
-    corrplot(method = "circle", type = "lower")
+    corrplot(method = "circle", type = "lower", diag = FALSE)
 ```
 
 <img src="predicting_personality_files/figure-gfm/correlation plot-1.png" style="display: block; margin: auto;" />
@@ -128,19 +159,86 @@ data1 %>%
 ## Visual EDA
 
 ``` r
-ggplot(data = data1, aes(fill = e_i, x = e_i)) + geom_bar()
+ggplot(data = data1, aes(fill = e_i, x = e_i)) + geom_bar(colour = "black") + scale_fill_brewer(palette = "Pastel1") +
+    guides(fill = FALSE) + labs(x = NULL, y = "Number of Participants")
 ```
 
 <img src="predicting_personality_files/figure-gfm/visual eda-1.png" style="display: block; margin: auto;" />
 
 ``` r
-ggplot(data = data1, aes(fill = sex, x = e_i)) + geom_bar(position = "fill")
+ggplot(data = data1, aes(fill = sex, x = e_i)) + geom_bar(position = "fill", colour = "black") +
+    scale_fill_brewer(palette = "Pastel1") + labs(x = NULL, y = "Proportion of Participants",
+    fill = "Sex")
 ```
 
 <img src="predicting_personality_files/figure-gfm/visual eda-2.png" style="display: block; margin: auto;" />
 
 ``` r
-ggplot(data = data1, aes(fill = posture, x = e_i)) + geom_bar(position = "fill")
+ggplot(data = data1, aes(fill = posture, x = e_i)) + geom_bar(position = "fill",
+    colour = "black") + scale_fill_brewer(palette = "Pastel1") + labs(x = NULL, y = "Proportion of Participants",
+    fill = "Posture Type")
 ```
 
 <img src="predicting_personality_files/figure-gfm/visual eda-3.png" style="display: block; margin: auto;" />
+
+``` r
+ggplot(data = data1, aes(fill = activity_level, x = posture)) + geom_bar(position = "fill",
+    colour = "black") + labs(x = "Posture Type", fill = "Activity Level") + facet_grid(. ~
+    e_i) + scale_fill_brewer(palette = "Pastel1") + labs(y = "Proportion of Participants",
+    fill = "Activity Level")
+```
+
+<img src="predicting_personality_files/figure-gfm/visual eda-4.png" style="display: block; margin: auto;" />
+
+``` r
+ggplot(data = data.frame(data1, transmute(data1, s_n = factor(ifelse(s > n, "sensing",
+    "inuitive")))), aes(x = e_i, fill = s_n)) + geom_bar(position = "fill", colour = "black") +
+    scale_fill_brewer(palette = "Pastel1") + labs(x = "", y = "Proportion of Participants",
+    fill = NULL)
+```
+
+<img src="predicting_personality_files/figure-gfm/visual eda-5.png" style="display: block; margin: auto;" />
+
+``` r
+ggplot(data = data.frame(data1, transmute(data1, t_f = factor(ifelse(t > f, "thinking",
+    "feeling")))), aes(x = e_i, fill = t_f)) + geom_bar(position = "fill", colour = "black") +
+    scale_fill_brewer(palette = "Pastel1") + labs(x = NULL, y = "Proportion of Participants",
+    fill = NULL)
+```
+
+<img src="predicting_personality_files/figure-gfm/visual eda-6.png" style="display: block; margin: auto;" />
+
+``` r
+ggplot(data = data.frame(data1, transmute(data1, j_p = factor(ifelse(j > p, "judging",
+    "perceiving")))), aes(x = e_i, fill = j_p)) + geom_bar(position = "fill", color = "black") +
+    scale_fill_brewer(palette = "Pastel1") + labs(x = NULL, y = "Proportion of Participants",
+    fill = NULL)
+```
+
+<img src="predicting_personality_files/figure-gfm/visual eda-7.png" style="display: block; margin: auto;" />
+
+``` r
+p1 <- ggplot(data = data1, aes(x = posture, y = pain_1, fill = posture)) + geom_boxplot(color = "black") +
+    stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
+    scale_fill_brewer(palette = "Pastel1") + labs(x = "Posture Type", y = "Level of Neck Pain") +
+    guides(fill = FALSE)
+
+p2 <- ggplot(data = data1, aes(x = posture, y = pain_2, fill = posture)) + geom_boxplot(color = "black") +
+    stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
+    scale_fill_brewer(palette = "Pastel1") + labs(x = "Posture Type", y = "Level of Thoracic Pain") +
+    guides(fill = FALSE)
+
+p3 <- ggplot(data = data1, aes(x = posture, y = pain_3, fill = posture)) + geom_boxplot(color = "black") +
+    stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
+    scale_fill_brewer(palette = "Pastel1") + labs(x = "Posture Type", y = "Level of Lumbar Pain") +
+    guides(fill = FALSE)
+
+p4 <- ggplot(data = data1, aes(x = posture, y = pain_4, fill = posture)) + geom_boxplot(color = "black") +
+    stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
+    scale_fill_brewer(palette = "Pastel1") + labs(x = "Posture Type", y = "Level of Sacral Pain") +
+    guides(fill = FALSE)
+
+p1 + p2 + p3 + p4
+```
+
+<img src="predicting_personality_files/figure-gfm/pain-plots-1.png" style="display: block; margin: auto;" />
