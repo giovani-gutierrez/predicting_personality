@@ -285,6 +285,23 @@ knn_wf <- workflow() %>%
 ```
 
 ## Tuning Model Hyperparameters
+### Elastic Net Logistic Regression
+```{r}
+elastic_grid <- grid_regular(
+  mixture(),
+  penalty(),
+  levels = 10
+)
+
+tuned_elastic <- tune_grid(
+  object = elastic_wf,
+  resamples = person_folds,
+  grid = elastic_grid
+)
+
+tuned_elastic %>% 
+  write_rds(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_elastic.rds')
+```
 
 ### K-Nearest Neighbors
 ```{r eval = FALSE}
