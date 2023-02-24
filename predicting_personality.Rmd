@@ -286,7 +286,7 @@ knn_wf <- workflow() %>%
 
 ## Tuning Model Hyperparameters
 ### Elastic Net Logistic Regression
-```{r}
+```{r eval = FALSE}
 elastic_grid <- grid_regular(
   mixture(),
   penalty(),
