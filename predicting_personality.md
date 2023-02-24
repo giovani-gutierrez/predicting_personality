@@ -14,6 +14,18 @@ Giovani Gutierrez
   - <a href="#correlation-between-features"
     id="toc-correlation-between-features">Correlation Between Features</a>
   - <a href="#visual-eda" id="toc-visual-eda">Visual EDA</a>
+- <a href="#model-setup" id="toc-model-setup">Model Setup</a>
+  - <a href="#data-split--k-fold-cross-validation"
+    id="toc-data-split--k-fold-cross-validation">Data Split &amp;
+    <em>k</em>-Fold Cross Validation</a>
+  - <a href="#recipe-building--workflow"
+    id="toc-recipe-building--workflow">Recipe Building &amp; Workflow</a>
+  - <a href="#model-specifications--workflow-sets"
+    id="toc-model-specifications--workflow-sets">Model Specifications &amp;
+    Workflow Sets</a>
+    - <a href="#first-recipe-pca_pain_rec"
+      id="toc-first-recipe-pca_pain_rec">First Recipe
+      (<code>pca_pain_rec</code>)</a>
 
 # Getting Started
 
@@ -28,6 +40,10 @@ library(visdat)
 library(naniar)
 library(corrplot)
 library(patchwork)
+library(tidytext)
+library(glmnet)
+library(kknn)
+library(discrim)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -148,10 +164,13 @@ head(data1)  # preview cleaned data
 ## Correlation Between Features
 
 ``` r
+tmwr_cols <- colorRampPalette(c("#91CBD765", "#CA225E"))
+
 data1 %>%
     select_if(is.numeric) %>%
     cor() %>%
-    corrplot(method = "circle", type = "lower", diag = FALSE)
+    corrplot(col = tmwr_cols(200), tl.col = "black", method = "circle", type = "lower",
+        diag = FALSE)
 ```
 
 <img src="predicting_personality_files/figure-gfm/correlation plot-1.png" style="display: block; margin: auto;" />
@@ -242,3 +261,76 @@ p1 + p2 + p3 + p4
 ```
 
 <img src="predicting_personality_files/figure-gfm/pain-plots-1.png" style="display: block; margin: auto;" />
+
+# Model Setup
+
+## Data Split & *k*-Fold Cross Validation
+
+``` r
+person_split <- initial_split(data = data1, prop = 0.7, strata = e_i)  # initial split
+
+person_train <- training(person_split)  # training set
+person_test <- testing(person_split)  # testing set
+
+person_folds <- vfold_cv(person_train, v = 10, strata = e_i)  # 10-fold cross validation
+```
+
+## Recipe Building & Workflow
+
+``` r
+pca_pain_rec <- recipe(e_i ~ ., data = person_train) %>%
+    step_dummy(all_nominal_predictors()) %>%
+    step_normalize(all_numeric_predictors()) %>%
+    step_pca(pain_1, pain_2, pain_3, pain_4, num_comp = 1, prefix = "PC1") %>%
+    step_pca(s, n, num_comp = 1, prefix = "PC2") %>%
+    step_pca(t, f, num_comp = 1, prefix = "PC3") %>%
+    step_pca(j, p, num_comp = 1, prefix = "PC4")
+
+pca_combined_rec <- recipe(e_i ~ ., data = person_train) %>%
+    step_dummy(all_nominal_predictors()) %>%
+    step_normalize(all_numeric_predictors()) %>%
+    step_pca(s, n, t, f, j, p, threshold = tune())
+```
+
+## Model Specifications & Workflow Sets
+
+### First Recipe (`pca_pain_rec`)
+
+#### Elastic Net Logistic Regression
+
+``` r
+elastic_pain_spec <- logistic_reg(mixture = tune(), penalty = tune()) %>%
+    set_mode("classification") %>%
+    set_engine("glmnet")
+```
+
+#### Linear Discriminant Analysis (LDA)
+
+``` r
+lda_pain_spec <- discrim_linear() %>%
+    set_mode("classification") %>%
+    set_engine("MASS")
+```
+
+#### Qudratic Discriminant Analysis (QDA)
+
+``` r
+qda_pain_spec <- discrim_quad() %>%
+    set_mode("classification") %>%
+    set_engine("MASS")
+```
+
+#### K-Nearest Neighbors
+
+``` r
+knn_pain_spec <- nearest_neighbor(neighbors = tune()) %>%
+    set_mode("classification") %>%
+    set_engine("kknn")
+```
+
+#### Workflow Set
+
+``` r
+pca_pain_wf <- workflow_set(preproc = list(pca_pain = pca_pain_rec), models = list(elastic_net = elastic_pain_spec,
+    lda = lda_pain_spec, qda = qda_pain_spec, knn = knn_pain_spec))
+```
