@@ -34,6 +34,9 @@ library(visdat)
 library(naniar)
 library(corrplot)
 library(patchwork)
+library(tidytext)
+library(glmnet)
+library(kknn)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -111,10 +114,14 @@ head(data1) # preview cleaned data
 ## Correlation Between Features
 
 ```{r correlation plot}
+tmwr_cols <- colorRampPalette(c("#91CBD765", "#CA225E"))
+
 data1 %>% 
   select_if(is.numeric) %>% 
   cor() %>% 
-  corrplot(method = 'circle', 
+  corrplot(col = tmwr_cols(200), 
+           tl.col = "black",
+           method = 'circle', 
            type = 'lower',
            diag = FALSE)
 ```
@@ -198,4 +205,74 @@ p1 + p2 + p3 + p4
 
 # Model Setup
 
-## Data Split & *k*-Cross Validation
+## Data Split & *k*-Fold Cross Validation
+
+```{r}
+person_split <- initial_split(data = data1, prop = 0.70, strata = e_i) # initial split
+
+person_train <- training(person_split) # training set
+person_test <- testing(person_split) # testing set
+
+person_folds <- vfold_cv(person_train, v = 10, strata = e_i) # 10-fold cross validation
+```
+
+## Recipe Building & Workflow
+
+```{r}
+pca_rec <- recipe(e_i ~ ., data = person_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_pca(pain_1, pain_2, pain_3, pain_4, 
+           num_comp = 1, prefix = 'PC0') %>% 
+  step_pca(s, n, t, f, j, p, 
+           num_comp = 3, prefix = 'PC1')
+
+prep(pca_rec) %>% 
+  bake(new_data = person_train)
+
+```
+
+## Model Specifications & Workflows
+
+```{r}
+elastic_spec <- logistic_reg(mixture = tune(),
+                            penalty = tune()) %>% 
+  set_mode('classification') %>% 
+  set_engine('glmnet')
+
+elastic_wf <- workflow() %>% 
+  add_recipe(pca_rec) %>% 
+  add_model(elastic_spec)
+```
+
+```{r}
+lda_spec <- discrim_linear() %>% 
+  set_mode('classification') %>% 
+  set_engine('MASS')
+
+lda_wf <- workflow() %>% 
+  add_recipe(pca_rec) %>% 
+  add_model(lda_spec)
+```
+
+```{r}
+qda_spec <- discrim_quad() %>% 
+  set_mode('classification') %>% 
+  set_engine('MASS')
+
+qda_wf <- workflow() %>% 
+  add_recipe(pca_rec) %>% 
+  add_model(qda_spec)
+```
+
+```{r}
+knn_spec <- nearest_neighbor(neighbors = tune()) %>% 
+  set_mode('classification') %>% 
+  set_engine('kknn')
+
+knn_wf <- workflow() %>% 
+  add_recipe(pca_rec) %>% 
+  add_model()
+```
+
+
