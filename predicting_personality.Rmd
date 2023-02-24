@@ -220,9 +220,9 @@ person_folds <- vfold_cv(person_train, v = 10, strata = e_i) # 10-fold cross val
 ## Recipe Building & Workflow
 
 ```{r}
-pca_rec <- recipe(e_i ~ ., data = person_train) %>% 
+pca_pain_rec <- recipe(e_i ~ ., data = person_train) %>% 
   step_dummy(all_nominal_predictors()) %>% 
-  step_normalize(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
   step_pca(pain_1, pain_2, pain_3, pain_4, 
            num_comp = 1, prefix = 'PC1') %>% 
   step_pca(s, n, 
@@ -232,91 +232,122 @@ pca_rec <- recipe(e_i ~ ., data = person_train) %>%
   step_pca(j, p, 
            num_comp = 1, prefix = 'PC4')
 
-prep(pca_rec) %>% 
-  bake(new_data = person_train) %>% 
-  head()
+pca_combined_rec <- 
+  recipe (e_i ~ ., data = person_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_pca(s, n, t, f, j, p,
+           threshold = tune())
 ```
 
 ## Model Specifications & Workflows
 
+### First Recipe (`pca_pain_rec`)
+
 ### Elastic Net Logistic Regression
 ```{r}
-elastic_spec <- logistic_reg(mixture = tune(),
+elastic_pain_spec <- logistic_reg(mixture = tune(),
                             penalty = tune()) %>% 
   set_mode('classification') %>% 
   set_engine('glmnet')
 
-elastic_wf <- workflow() %>% 
-  add_recipe(pca_rec) %>% 
-  add_model(elastic_spec)
+elastic_pain_wf <- workflow() %>% 
+  add_recipe(pca_pain_rec) %>% 
+  add_model(elastic_pain_spec)
 ```
 
 ### Linear Discriminant Analysis (LDA)
 ```{r}
-lda_spec <- discrim_linear() %>% 
+lda_pain_spec <- discrim_linear() %>% 
   set_mode('classification') %>% 
   set_engine('MASS')
 
-lda_wf <- workflow() %>% 
-  add_recipe(pca_rec) %>% 
-  add_model(lda_spec)
+lda_pain_wf <- workflow() %>% 
+  add_recipe(pca_pain_rec) %>% 
+  add_model(lda_pain_spec)
 ```
 
 ### Qudratic Discriminant Analysis (QDA)
 ```{r}
-qda_spec <- discrim_quad() %>% 
+qda_pain_spec <- discrim_quad() %>% 
   set_mode('classification') %>% 
   set_engine('MASS')
 
-qda_wf <- workflow() %>% 
-  add_recipe(pca_rec) %>% 
-  add_model(qda_spec)
+qda_pain_wf <- workflow() %>% 
+  add_recipe(pca_pain_rec) %>% 
+  add_model(qda_pain_spec)
 ```
 
 ### K-Nearest Neighbors
 ```{r}
-knn_spec <- nearest_neighbor(neighbors = tune()) %>% 
+knn_pain_spec <- nearest_neighbor(neighbors = tune()) %>% 
   set_mode('classification') %>% 
   set_engine('kknn')
 
-knn_wf <- workflow() %>% 
-  add_recipe(pca_rec) %>% 
-  add_model(knn_spec)
+knn_pain_wf <- workflow() %>% 
+  add_recipe(pca_pain_rec) %>% 
+  add_model(knn_pain_spec)
 ```
 
-## Tuning Model Hyperparameters
-### Elastic Net Logistic Regression
+## Tuning Model Hyperparameters & Fitting Models via Resampling
+
+### First Recipe (`pca_pain_rec`)
+
+#### Elastic Net Logistic Regression
 ```{r eval = FALSE}
-elastic_grid <- grid_regular(
+elastic_pain_grid <- grid_regular(
   mixture(),
   penalty(),
   levels = 10
 )
 
-tuned_elastic <- tune_grid(
-  object = elastic_wf,
+tuned_elastic_pain <- tune_grid(
+  object = elastic_pain_wf,
   resamples = person_folds,
-  grid = elastic_grid
+  grid = elastic_pain_grid
 )
 
-tuned_elastic %>% 
-  write_rds(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_elastic.rds')
+tuned_elastic_pain %>% 
+  write_rds(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_elastic_pain.rds')
 ```
 
-### K-Nearest Neighbors
+#### Linear Discriminant Analysis (LDA)
 ```{r eval = FALSE}
-knn_grid <- grid_regular(
+tuned_lda_pain <- fit_resamples(
+  object = lda_pain_wf,
+  resamples = person_folds
+)
+
+tuned_lda_pain %>% 
+  write_rds(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_lda_pain.rds')
+```
+
+#### Quadratic Discriminant Analysis (QDA)
+```{r eval = FALSE}
+tuned_qda_pain <- fit_resamples(
+  object = qda_pain_wf,
+  resamples = person_folds
+)
+
+tuned_qda_pain %>% 
+  write_rds(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_qda_pain.rds')
+```
+
+
+#### K-Nearest Neighbors
+```{r eval = FALSE}
+knn_pain_grid <- grid_regular(
   neighbors(range = c(1, 10)),
   levels = 10
 )
 
-tuned_knn <- tune_grid(
-  object = knn_wf,
+tuned_knn_pain <- tune_grid(
+  object = knn_pain_wf,
   resamples = person_folds,
-  grid = knn_grid
+  grid = knn_pain_grid
 )
 
-tuned_knn %>% 
-  write_rds(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_knn.rds')
+tuned_knn_pain %>% 
+  write_rds(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_knn_pain.rds')
 ```
 
