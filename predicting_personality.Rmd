@@ -37,6 +37,7 @@ library(patchwork)
 library(tidytext)
 library(glmnet)
 library(kknn)
+library(discrim)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -221,19 +222,24 @@ person_folds <- vfold_cv(person_train, v = 10, strata = e_i) # 10-fold cross val
 ```{r}
 pca_rec <- recipe(e_i ~ ., data = person_train) %>% 
   step_dummy(all_nominal_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
+  step_normalize(all_predictors()) %>% 
   step_pca(pain_1, pain_2, pain_3, pain_4, 
-           num_comp = 1, prefix = 'PC0') %>% 
-  step_pca(s, n, t, f, j, p, 
-           num_comp = 3, prefix = 'PC1')
+           num_comp = 1, prefix = 'PC1') %>% 
+  step_pca(s, n, 
+           num_comp = 1, prefix = 'PC2') %>% 
+  step_pca(t, f,
+           num_comp = 1, prefix = 'PC3') %>% 
+  step_pca(j, p, 
+           num_comp = 1, prefix = 'PC4')
 
 prep(pca_rec) %>% 
-  bake(new_data = person_train)
-
+  bake(new_data = person_train) %>% 
+  head()
 ```
 
 ## Model Specifications & Workflows
 
+### Elastic Net Logistic Regression
 ```{r}
 elastic_spec <- logistic_reg(mixture = tune(),
                             penalty = tune()) %>% 
@@ -245,6 +251,7 @@ elastic_wf <- workflow() %>%
   add_model(elastic_spec)
 ```
 
+### Linear Discriminant Analysis (LDA)
 ```{r}
 lda_spec <- discrim_linear() %>% 
   set_mode('classification') %>% 
@@ -255,6 +262,7 @@ lda_wf <- workflow() %>%
   add_model(lda_spec)
 ```
 
+### Qudratic Discriminant Analysis (QDA)
 ```{r}
 qda_spec <- discrim_quad() %>% 
   set_mode('classification') %>% 
@@ -265,6 +273,7 @@ qda_wf <- workflow() %>%
   add_model(qda_spec)
 ```
 
+### K-Nearest Neighbors
 ```{r}
 knn_spec <- nearest_neighbor(neighbors = tune()) %>% 
   set_mode('classification') %>% 
@@ -272,7 +281,25 @@ knn_spec <- nearest_neighbor(neighbors = tune()) %>%
 
 knn_wf <- workflow() %>% 
   add_recipe(pca_rec) %>% 
-  add_model()
+  add_model(knn_spec)
 ```
 
+## Tuning Model Hyperparameters
+
+### K-Nearest Neighbors
+```{r eval = FALSE}
+knn_grid <- grid_regular(
+  neighbors(range = c(1, 10)),
+  levels = 10
+)
+
+tuned_knn <- tune_grid(
+  object = knn_wf,
+  resamples = person_folds,
+  grid = knn_grid
+)
+
+tuned_knn %>% 
+  write_rds(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_knn.rds')
+```
 
