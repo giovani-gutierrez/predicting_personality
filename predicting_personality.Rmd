@@ -38,6 +38,8 @@ library(tidytext)
 library(glmnet)
 library(kknn)
 library(discrim)
+library(rpart)
+library(rpart.plot)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -222,101 +224,82 @@ person_folds <- vfold_cv(person_train, v = 10, strata = e_i) # 10-fold cross val
 ```{r}
 simple_rec <- 
   recipe(e_i ~ ., data = person_train) %>% 
-  step_rm(n, f, p)
-  
-normalized_rec <- 
-  recipe(e_i ~ ., data = person_train) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_normalize(all_numeric_predictors())
-
-pca_rec <- 
-  normalized_rec %>% 
-  step_pca(s, n,
-           num_comp = 1) %>% 
-  step_pca(t, f,
-           num_comp = 1) %>% 
-  step_pca(j, p,
-           num_comp = 1)
+  
+corr_rec <- 
+  simple_rec %>% 
+  step_corr(all_numeric_predictors(),
+            threshold = tune())
 ```
 
-## Model Specifications & Workflow Sets
+## Model Specifications
 
-### First Recipe (`pca_pain_rec`)
+### First Recipe (`regularize_rec`)
+
+#### K-Nearest Neighbors
+```{r}
+knn_simple_spec <- 
+  nearest_neighbor(neighbors = tune()) %>% 
+  set_mode('classification') %>% 
+  set_engine('kknn')
+```
 
 #### Elastic Net Logistic Regression
 ```{r}
-elastic_pain_spec <- logistic_reg(mixture = tune(),
+elastic_spec <- logistic_reg(mixture = tune(),
                             penalty = tune()) %>% 
   set_mode('classification') %>% 
   set_engine('glmnet')
 ```
 
-#### Linear Discriminant Analysis (LDA)
-```{r}
-lda_pain_spec <- discrim_linear() %>% 
-  set_mode('classification') %>% 
-  set_engine('MASS')
-```
-
-#### Qudratic Discriminant Analysis (QDA)
-```{r}
-qda_pain_spec <- discrim_quad() %>% 
-  set_mode('classification') %>% 
-  set_engine('MASS')
-```
+### Second Recipe (`corr_rec`)
 
 #### K-Nearest Neighbors
 ```{r}
-knn_pain_spec <- nearest_neighbor(neighbors = tune()) %>% 
+knn_spec <- nearest_neighbor(neighbors = tune()) %>% 
   set_mode('classification') %>% 
   set_engine('kknn')
 ```
 
-#### Workflow Set
+#### Logistic Regression
 ```{r}
-pca_pain_wf <- 
-  workflow_set(
-    preproc = list(pca_pain = pca_pain_rec),
-    models = list(elastic_net = elastic_pain_spec,
-                  lda = lda_pain_spec,
-                  qda = qda_pain_spec,
-                  knn = knn_pain_spec)
-  )
-```
-
-### Second Recipe (`pca_combined_rec`)
-
-#### Elastic Net Logistic Regression
-```{r}
-elastic_comb_spec <- logistic_reg(mixture = tune(),
-                                  penalty = tune()) %>% 
+log_spec <- logistic_reg() %>% 
   set_mode('classification') %>% 
-  set_engine('glmnet')
+  set_engine('glm')
 ```
 
-#### K-Nearest Neighbors
+#### Classification Tree
 ```{r}
-knn_comb_spec <- nearest_neighbor(neighbors = tune()) %>% 
+tree_spec <- decision_tree(cost_complexity = tune()) %>% 
   set_mode('classification') %>% 
-  set_engine('kknn')
-```
-
-#### Workflow Map
-```{r}
-comb_wf <- 
-  workflow_set(
-    preproc = list(comb = pca_combined_rec),
-    models = list(elastic_net = elastic_comb_spec,
-                  knn = knn_comb_spec)
-  )
+  set_engine('rpart')
 ```
 
 # Model Tuning & Evaluation
 
+## Workflow Sets
+```{r}
+simple_wf <- 
+  workflow_set(
+    preproc = list(simple = simple_rec),
+    models = list(elastic_net = elastic_spec,
+                  knn = knn_simple_spec)
+  )
+
+corr_wf <- 
+  workflow_set(
+    preproc = list(corr = corr_rec),
+    models = list(knn = knn_spec,
+                  log_reg = log_spec,
+                  class_tree = tree_spec)
+  )
+```
+
 ## Workflow Map
 ```{r eval = FALSE}
 all_workflows <-
-  bind_rows(pca_pain_wf, comb_wf)
+  bind_rows(simple_wf, corr_wf)
 
 grid_ctrl <-
    control_grid(
@@ -325,8 +308,7 @@ grid_ctrl <-
       save_workflow = TRUE
    )
 
-grid_results <-
-   all_workflows %>%
+grid_results <- all_workflows %>%
    workflow_map(
       seed = 123,
       resamples = person_folds,
@@ -334,13 +316,17 @@ grid_results <-
       control = grid_ctrl
    )
 
-grid_results <-
-  write_rds(grid_results, file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/grid_results.rda')
+autoplot(
+   grid_results,
+   rank_metric = 'roc_auc',
+   metric = 'roc_auc',
+   select_best = TRUE,
+)
 
 grid_results %>% 
    rank_results() %>% 
    filter(.metric == "roc_auc") %>% 
-   select(model, .config, roc_auc = mean, rank)
+   select(model, .config, roc_auc = mean, rank, wflow_id)
 ```
 
 
