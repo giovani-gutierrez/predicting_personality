@@ -34,12 +34,12 @@ library(visdat)
 library(naniar)
 library(corrplot)
 library(patchwork)
-library(tidytext)
 library(glmnet)
 library(kknn)
-library(discrim)
 library(rpart)
 library(rpart.plot)
+library(ranger)
+library(vip)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -222,35 +222,33 @@ person_folds <- vfold_cv(person_train, v = 10, strata = e_i) # 10-fold cross val
 ## Recipe Building & Workflow
 
 ```{r}
-simple_rec <- 
-  recipe(e_i ~ ., data = person_train) %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_normalize(all_numeric_predictors())
-  
+simple_rec <-
+  recipe(e_i ~ ., data = person_train)
+
 corr_rec <- 
-  simple_rec %>% 
+  simple_rec %>%
+  step_dummy(all_nominal_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
   step_corr(all_numeric_predictors(),
             threshold = tune())
 ```
 
 ## Model Specifications
 
-### First Recipe (`regularize_rec`)
+### First Recipe (`simple_rec`)
 
-#### K-Nearest Neighbors
+#### Decision Tree
 ```{r}
-knn_simple_spec <- 
-  nearest_neighbor(neighbors = tune()) %>% 
+tree_spec <- decision_tree(cost_complexity = tune()) %>% 
   set_mode('classification') %>% 
-  set_engine('kknn')
+  set_engine('rpart')
 ```
 
-#### Elastic Net Logistic Regression
+#### Random Forest
 ```{r}
-elastic_spec <- logistic_reg(mixture = tune(),
-                            penalty = tune()) %>% 
+forest_spec <- rand_forest(mtry = tune()) %>% 
   set_mode('classification') %>% 
-  set_engine('glmnet')
+  set_engine('ranger')
 ```
 
 ### Second Recipe (`corr_rec`)
@@ -269,13 +267,6 @@ log_spec <- logistic_reg() %>%
   set_engine('glm')
 ```
 
-#### Classification Tree
-```{r}
-tree_spec <- decision_tree(cost_complexity = tune()) %>% 
-  set_mode('classification') %>% 
-  set_engine('rpart')
-```
-
 # Model Tuning & Evaluation
 
 ## Workflow Sets
@@ -283,20 +274,19 @@ tree_spec <- decision_tree(cost_complexity = tune()) %>%
 simple_wf <- 
   workflow_set(
     preproc = list(simple = simple_rec),
-    models = list(elastic_net = elastic_spec,
-                  knn = knn_simple_spec)
+    models = list(class_tree = tree_spec,
+                  random_forest = forest_spec)
   )
 
 corr_wf <- 
   workflow_set(
     preproc = list(corr = corr_rec),
     models = list(knn = knn_spec,
-                  log_reg = log_spec,
-                  class_tree = tree_spec)
+                  log_reg = log_spec)
   )
 ```
 
-## Workflow Map
+## Workflow Map & Tuning
 ```{r eval = FALSE}
 all_workflows <-
   bind_rows(simple_wf, corr_wf)
@@ -316,17 +306,23 @@ grid_results <- all_workflows %>%
       control = grid_ctrl
    )
 
+grid_results %>% 
+  write_rds('C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_grid.rds')
+```
+
+## Evaluation of Models
+```{r}
 autoplot(
    grid_results,
-   rank_metric = 'roc_auc',
-   metric = 'roc_auc',
-   select_best = TRUE,
+   rank_metric = "roc_auc",
+   metric = "roc_auc",
+   select_best = TRUE
 )
 
 grid_results %>% 
    rank_results() %>% 
    filter(.metric == "roc_auc") %>% 
-   select(model, .config, roc_auc = mean, rank, wflow_id)
+   select(model, .config, roc_auc = mean, rank)
 ```
 
 
