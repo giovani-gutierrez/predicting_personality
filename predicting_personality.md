@@ -34,6 +34,9 @@ Giovani Gutierrez
     Map &amp; Tuning</a>
   - <a href="#evaluation-of-models" id="toc-evaluation-of-models">Evaluation
     of Models</a>
+    - <a href="#k-nearest-neighbors-1"
+      id="toc-k-nearest-neighbors-1">K-Nearest Neighbors</a>
+    - <a href="#random-forest-1" id="toc-random-forest-1">Random Forest</a>
 
 # Getting Started
 
@@ -311,7 +314,7 @@ tree_spec <- decision_tree(cost_complexity = tune()) %>%
 #### Random Forest
 
 ``` r
-forest_spec <- rand_forest(mtry = tune()) %>%
+forest_spec <- rand_forest(mtry = tune(), min_n = tune(), trees = 1000) %>%
     set_mode("classification") %>%
     set_engine("ranger")
 ```
@@ -385,8 +388,24 @@ grid_results %>%
 | nearest_neighbor | Preprocessor06_Model1 | 0.5805556 |    1 |
 | nearest_neighbor | Preprocessor09_Model1 | 0.5395833 |    2 |
 | nearest_neighbor | Preprocessor07_Model1 | 0.5243056 |    3 |
-| rand_forest      | Preprocessor1_Model5  | 0.5097222 |    4 |
+| rand_forest      | Preprocessor1_Model10 | 0.5138889 |    4 |
 | decision_tree    | Preprocessor1_Model10 | 0.5079861 |    5 |
 | decision_tree    | Preprocessor1_Model05 | 0.5079861 |    6 |
 
 </div>
+
+### K-Nearest Neighbors
+
+``` r
+autoplot(grid_results, id = "corr_knn", metric = "roc_auc")
+```
+
+<img src="predicting_personality_files/figure-gfm/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
+
+### Random Forest
+
+``` r
+autoplot(grid_results, id = "simple_random_forest", metric = "roc_auc")
+```
+
+<img src="predicting_personality_files/figure-gfm/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
