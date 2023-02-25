@@ -246,7 +246,9 @@ tree_spec <- decision_tree(cost_complexity = tune()) %>%
 
 #### Random Forest
 ```{r}
-forest_spec <- rand_forest(mtry = tune()) %>% 
+forest_spec <- rand_forest(mtry = tune(),
+                           min_n = tune(),
+                           trees = 1000) %>% 
   set_mode('classification') %>% 
   set_engine('ranger')
 ```
@@ -312,6 +314,8 @@ grid_results %>%
 
 ## Evaluation of Models
 ```{r}
+grid_results <- read_rds(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_grid.rds')
+
 autoplot(
    grid_results,
    rank_metric = "roc_auc",
@@ -320,9 +324,20 @@ autoplot(
 )
 
 grid_results %>% 
-   rank_results() %>% 
-   filter(.metric == "roc_auc") %>% 
-   select(model, .config, roc_auc = mean, rank)
+  rank_results() %>% 
+  filter(.metric == "roc_auc") %>% 
+  select(model, .config, roc_auc = mean, rank) %>% 
+  head()
+```
+
+### K-Nearest Neighbors
+```{r}
+autoplot(grid_results, id = 'corr_knn', metric = 'roc_auc')
+```
+
+### Random Forest
+```{r}
+autoplot(grid_results, id = 'simple_random_forest', metric = 'roc_auc')
 ```
 
 
