@@ -20,12 +20,20 @@ Giovani Gutierrez
     <em>k</em>-Fold Cross Validation</a>
   - <a href="#recipe-building--workflow"
     id="toc-recipe-building--workflow">Recipe Building &amp; Workflow</a>
-  - <a href="#model-specifications--workflow-sets"
-    id="toc-model-specifications--workflow-sets">Model Specifications &amp;
-    Workflow Sets</a>
-    - <a href="#first-recipe-pca_pain_rec"
-      id="toc-first-recipe-pca_pain_rec">First Recipe
-      (<code>pca_pain_rec</code>)</a>
+  - <a href="#model-specifications" id="toc-model-specifications">Model
+    Specifications</a>
+    - <a href="#first-recipe-simple_rec"
+      id="toc-first-recipe-simple_rec">First Recipe
+      (<code>simple_rec</code>)</a>
+    - <a href="#second-recipe-corr_rec" id="toc-second-recipe-corr_rec">Second
+      Recipe (<code>corr_rec</code>)</a>
+- <a href="#model-tuning--evaluation"
+  id="toc-model-tuning--evaluation">Model Tuning &amp; Evaluation</a>
+  - <a href="#workflow-sets" id="toc-workflow-sets">Workflow Sets</a>
+  - <a href="#workflow-map--tuning" id="toc-workflow-map--tuning">Workflow
+    Map &amp; Tuning</a>
+  - <a href="#evaluation-of-models" id="toc-evaluation-of-models">Evaluation
+    of Models</a>
 
 # Getting Started
 
@@ -40,10 +48,12 @@ library(visdat)
 library(naniar)
 library(corrplot)
 library(patchwork)
-library(tidytext)
 library(glmnet)
 library(kknn)
-library(discrim)
+library(rpart)
+library(rpart.plot)
+library(ranger)
+library(vip)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -278,59 +288,105 @@ person_folds <- vfold_cv(person_train, v = 10, strata = e_i)  # 10-fold cross va
 ## Recipe Building & Workflow
 
 ``` r
-pca_pain_rec <- recipe(e_i ~ ., data = person_train) %>%
+simple_rec <- recipe(e_i ~ ., data = person_train)
+
+corr_rec <- simple_rec %>%
     step_dummy(all_nominal_predictors()) %>%
     step_normalize(all_numeric_predictors()) %>%
-    step_pca(pain_1, pain_2, pain_3, pain_4, num_comp = 1, prefix = "PC1") %>%
-    step_pca(s, n, num_comp = 1, prefix = "PC2") %>%
-    step_pca(t, f, num_comp = 1, prefix = "PC3") %>%
-    step_pca(j, p, num_comp = 1, prefix = "PC4")
-
-pca_combined_rec <- recipe(e_i ~ ., data = person_train) %>%
-    step_dummy(all_nominal_predictors()) %>%
-    step_normalize(all_numeric_predictors()) %>%
-    step_pca(s, n, t, f, j, p, threshold = tune())
+    step_corr(all_numeric_predictors(), threshold = tune())
 ```
 
-## Model Specifications & Workflow Sets
+## Model Specifications
 
-### First Recipe (`pca_pain_rec`)
+### First Recipe (`simple_rec`)
 
-#### Elastic Net Logistic Regression
+#### Decision Tree
 
 ``` r
-elastic_pain_spec <- logistic_reg(mixture = tune(), penalty = tune()) %>%
+tree_spec <- decision_tree(cost_complexity = tune()) %>%
     set_mode("classification") %>%
-    set_engine("glmnet")
+    set_engine("rpart")
 ```
 
-#### Linear Discriminant Analysis (LDA)
+#### Random Forest
 
 ``` r
-lda_pain_spec <- discrim_linear() %>%
+forest_spec <- rand_forest(mtry = tune()) %>%
     set_mode("classification") %>%
-    set_engine("MASS")
+    set_engine("ranger")
 ```
 
-#### Qudratic Discriminant Analysis (QDA)
-
-``` r
-qda_pain_spec <- discrim_quad() %>%
-    set_mode("classification") %>%
-    set_engine("MASS")
-```
+### Second Recipe (`corr_rec`)
 
 #### K-Nearest Neighbors
 
 ``` r
-knn_pain_spec <- nearest_neighbor(neighbors = tune()) %>%
+knn_spec <- nearest_neighbor(neighbors = tune()) %>%
     set_mode("classification") %>%
     set_engine("kknn")
 ```
 
-#### Workflow Set
+#### Logistic Regression
 
 ``` r
-pca_pain_wf <- workflow_set(preproc = list(pca_pain = pca_pain_rec), models = list(elastic_net = elastic_pain_spec,
-    lda = lda_pain_spec, qda = qda_pain_spec, knn = knn_pain_spec))
+log_spec <- logistic_reg() %>%
+    set_mode("classification") %>%
+    set_engine("glm")
 ```
+
+# Model Tuning & Evaluation
+
+## Workflow Sets
+
+``` r
+simple_wf <- workflow_set(preproc = list(simple = simple_rec), models = list(class_tree = tree_spec,
+    random_forest = forest_spec))
+
+corr_wf <- workflow_set(preproc = list(corr = corr_rec), models = list(knn = knn_spec,
+    log_reg = log_spec))
+```
+
+## Workflow Map & Tuning
+
+``` r
+all_workflows <- bind_rows(simple_wf, corr_wf)
+
+grid_ctrl <- control_grid(save_pred = TRUE, parallel_over = "everything", save_workflow = TRUE)
+
+grid_results <- all_workflows %>%
+    workflow_map(seed = 123, resamples = person_folds, grid = 10, control = grid_ctrl)
+
+grid_results %>%
+    write_rds("C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_grid.rds")
+```
+
+## Evaluation of Models
+
+``` r
+grid_results <- read_rds(file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_grid.rds")
+
+autoplot(grid_results, rank_metric = "roc_auc", metric = "roc_auc", select_best = TRUE)
+```
+
+<img src="predicting_personality_files/figure-gfm/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
+
+``` r
+grid_results %>%
+    rank_results() %>%
+    filter(.metric == "roc_auc") %>%
+    select(model, .config, roc_auc = mean, rank) %>%
+    head()
+```
+
+<div class="kable-table">
+
+| model            | .config               |   roc_auc | rank |
+|:-----------------|:----------------------|----------:|-----:|
+| nearest_neighbor | Preprocessor06_Model1 | 0.5805556 |    1 |
+| nearest_neighbor | Preprocessor09_Model1 | 0.5395833 |    2 |
+| nearest_neighbor | Preprocessor07_Model1 | 0.5243056 |    3 |
+| rand_forest      | Preprocessor1_Model5  | 0.5097222 |    4 |
+| decision_tree    | Preprocessor1_Model10 | 0.5079861 |    5 |
+| decision_tree    | Preprocessor1_Model05 | 0.5079861 |    6 |
+
+</div>
