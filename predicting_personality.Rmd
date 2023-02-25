@@ -220,24 +220,23 @@ person_folds <- vfold_cv(person_train, v = 10, strata = e_i) # 10-fold cross val
 ## Recipe Building & Workflow
 
 ```{r}
-pca_pain_rec <- recipe(e_i ~ ., data = person_train) %>% 
+simple_rec <- 
+  recipe(e_i ~ ., data = person_train) %>% 
+  step_rm(n, f, p)
+  
+normalized_rec <- 
+  recipe(e_i ~ ., data = person_train) %>% 
   step_dummy(all_nominal_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
-  step_pca(pain_1, pain_2, pain_3, pain_4, 
-           num_comp = 1, prefix = 'PC1') %>% 
-  step_pca(s, n, 
-           num_comp = 1, prefix = 'PC2') %>% 
-  step_pca(t, f,
-           num_comp = 1, prefix = 'PC3') %>% 
-  step_pca(j, p, 
-           num_comp = 1, prefix = 'PC4')
+  step_normalize(all_numeric_predictors())
 
-pca_combined_rec <- 
-  recipe (e_i ~ ., data = person_train) %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
-  step_pca(s, n, t, f, j, p,
-           threshold = tune())
+pca_rec <- 
+  normalized_rec %>% 
+  step_pca(s, n,
+           num_comp = 1) %>% 
+  step_pca(t, f,
+           num_comp = 1) %>% 
+  step_pca(j, p,
+           num_comp = 1)
 ```
 
 ## Model Specifications & Workflow Sets
@@ -284,3 +283,64 @@ pca_pain_wf <-
                   knn = knn_pain_spec)
   )
 ```
+
+### Second Recipe (`pca_combined_rec`)
+
+#### Elastic Net Logistic Regression
+```{r}
+elastic_comb_spec <- logistic_reg(mixture = tune(),
+                                  penalty = tune()) %>% 
+  set_mode('classification') %>% 
+  set_engine('glmnet')
+```
+
+#### K-Nearest Neighbors
+```{r}
+knn_comb_spec <- nearest_neighbor(neighbors = tune()) %>% 
+  set_mode('classification') %>% 
+  set_engine('kknn')
+```
+
+#### Workflow Map
+```{r}
+comb_wf <- 
+  workflow_set(
+    preproc = list(comb = pca_combined_rec),
+    models = list(elastic_net = elastic_comb_spec,
+                  knn = knn_comb_spec)
+  )
+```
+
+# Model Tuning & Evaluation
+
+## Workflow Map
+```{r eval = FALSE}
+all_workflows <-
+  bind_rows(pca_pain_wf, comb_wf)
+
+grid_ctrl <-
+   control_grid(
+      save_pred = TRUE,
+      parallel_over = "everything",
+      save_workflow = TRUE
+   )
+
+grid_results <-
+   all_workflows %>%
+   workflow_map(
+      seed = 123,
+      resamples = person_folds,
+      grid = 10,
+      control = grid_ctrl
+   )
+
+grid_results <-
+  write_rds(grid_results, file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/grid_results.rda')
+
+grid_results %>% 
+   rank_results() %>% 
+   filter(.metric == "roc_auc") %>% 
+   select(model, .config, roc_auc = mean, rank)
+```
+
+
