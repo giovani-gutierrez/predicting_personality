@@ -5,7 +5,7 @@ date: "2023-02-15"
 output: 
   github_document:
     toc: true
-    df_print: "kable"
+    df_print: paged
     keep_html: true
 
 ---
@@ -75,8 +75,7 @@ data1 <-
 data1 <- 
   data1 %>% 
   mutate(sex = factor(sex)) %>% 
-  mutate(activity_level = ordered(activity_level,
-                                  levels = c('Low', 'Moderate', 'High'))) %>% 
+  mutate(activity_level = factor(activity_level)) %>% 
   mutate_at(c('pain_1', 'pain_2', 'pain_3', 'pain_4'), 
             as.numeric) %>% 
   mutate(e_i = factor(ifelse(e > i, 'Extrovert', 'Introvert'))) %>% 
@@ -211,7 +210,7 @@ p1 + p2 + p3 + p4
 ## Data Split & *k*-Fold Cross Validation
 
 ```{r}
-person_split <- initial_split(data = data1, prop = 0.70, strata = e_i) # initial split
+person_split <- initial_split(data = data1, prop = 0.80, strata = e_i) # initial split
 
 person_train <- training(person_split) # training set
 person_test <- testing(person_split) # testing set
@@ -248,9 +247,9 @@ tree_spec <- decision_tree(cost_complexity = tune()) %>%
 ```{r}
 forest_spec <- rand_forest(mtry = tune(),
                            min_n = tune(),
-                           trees = 1000) %>% 
+                           trees = tune()) %>% 
   set_mode('classification') %>% 
-  set_engine('ranger')
+  set_engine('ranger', importance = 'impurity')
 ```
 
 ### Second Recipe (`corr_rec`)
@@ -264,9 +263,9 @@ knn_spec <- nearest_neighbor(neighbors = tune()) %>%
 
 #### Logistic Regression
 ```{r}
-log_spec <- logistic_reg() %>% 
+log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>% 
   set_mode('classification') %>% 
-  set_engine('glm')
+  set_engine('glmnet')
 ```
 
 # Model Tuning & Evaluation
@@ -297,14 +296,14 @@ grid_ctrl <-
    control_grid(
       save_pred = TRUE,
       parallel_over = "everything",
-      save_workflow = TRUE
-   )
+      save_workflow = TRUE,
+      verbose = TRUE)
 
 grid_results <- all_workflows %>%
    workflow_map(
       seed = 123,
       resamples = person_folds,
-      grid = 10,
+      grid = 8,
       control = grid_ctrl
    )
 
@@ -324,20 +323,27 @@ autoplot(
 )
 
 grid_results %>% 
-  rank_results() %>% 
-  filter(.metric == "roc_auc") %>% 
-  select(model, .config, roc_auc = mean, rank) %>% 
-  head()
+  rank_results()
+```
+
+### Elastic Net Logistic Regression
+```{r}
+autoplot(grid_results, id = 'corr_log_reg')
 ```
 
 ### K-Nearest Neighbors
 ```{r}
-autoplot(grid_results, id = 'corr_knn', metric = 'roc_auc')
+autoplot(grid_results, id = 'corr_knn')
 ```
 
 ### Random Forest
 ```{r}
-autoplot(grid_results, id = 'simple_random_forest', metric = 'roc_auc')
+autoplot(grid_results, id = 'simple_random_forest')
+
+rf_wf <- grid_results %>% 
+  extract_workflow_set_result(id ='simple_random_forest')
+
+rf_wf 
 ```
 
 
