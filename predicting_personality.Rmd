@@ -6,6 +6,7 @@ output:
   github_document:
     toc: true
     df_print: paged
+    number_sections: true
     keep_html: true
 
 ---
