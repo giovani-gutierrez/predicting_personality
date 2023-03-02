@@ -36,10 +36,10 @@ library(corrplot)
 library(patchwork)
 library(glmnet)
 library(kknn)
-library(rpart)
-library(rpart.plot)
 library(ranger)
 library(vip)
+library(kernlab)
+library(xgboost)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -226,22 +226,26 @@ simple_rec <-
 
 corr_rec <- 
   simple_rec %>%
-  step_dummy(all_nominal_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
   step_corr(all_numeric_predictors(),
-            threshold = tune())
+            threshold = tune()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_dummy(all_nominal_predictors())
+
+pca_rec <- 
+  simple_rec %>% 
+  step_corr(all_numeric_predictors(),
+            threshold = tune()) %>% 
+  step_zv(all_numeric_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_YeoJohnson(all_numeric_predictors()) %>% 
+  step_pca(all_numeric_predictors(), 
+           num_comp = tune()) %>% 
+  step_dummy(all_nominal_predictors())
 ```
 
 ## Model Specifications
 
 ### First Recipe (`simple_rec`)
-
-#### Decision Tree
-```{r}
-tree_spec <- decision_tree(cost_complexity = tune()) %>% 
-  set_mode('classification') %>% 
-  set_engine('rpart')
-```
 
 #### Random Forest
 ```{r}
@@ -249,8 +253,10 @@ forest_spec <- rand_forest(mtry = tune(),
                            min_n = tune(),
                            trees = tune()) %>% 
   set_mode('classification') %>% 
-  set_engine('ranger', importance = 'impurity')
+  set_engine('ranger', 
+             importance = 'impurity')
 ```
+
 
 ### Second Recipe (`corr_rec`)
 
@@ -268,6 +274,16 @@ log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>%
   set_engine('glmnet')
 ```
 
+### Third Recipe (`pca_rec`)
+
+#### Support Vector Machine 
+```{r}
+svm_spec <- svm_linear(cost = tune(),
+                       margin = tune()) %>% 
+  set_mode('classification') %>% 
+  set_engine('kernlab')
+```
+
 # Model Tuning & Evaluation
 
 ## Workflow Sets
@@ -275,8 +291,7 @@ log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>%
 simple_wf <- 
   workflow_set(
     preproc = list(simple = simple_rec),
-    models = list(class_tree = tree_spec,
-                  random_forest = forest_spec)
+    models = list(random_forest = forest_spec)
   )
 
 corr_wf <- 
@@ -285,19 +300,26 @@ corr_wf <-
     models = list(knn = knn_spec,
                   log_reg = log_spec)
   )
+
+pca_wf <-
+  workflow_set(
+    preproc = list(pca = pca_rec),
+    models = list(log_reg = log_spec,
+                  svm = svm_spec)
+  )
 ```
 
 ## Workflow Map & Tuning
 ```{r eval = FALSE}
 all_workflows <-
-  bind_rows(simple_wf, corr_wf)
+  bind_rows(simple_wf, corr_wf, pca_wf)
 
 grid_ctrl <-
    control_grid(
       save_pred = TRUE,
       parallel_over = "everything",
-      save_workflow = TRUE,
-      verbose = TRUE)
+      save_workflow = TRUE
+    )
 
 grid_results <- all_workflows %>%
    workflow_map(
@@ -320,30 +342,19 @@ autoplot(
    rank_metric = "roc_auc",
    metric = "roc_auc",
    select_best = TRUE
-)
+) +
+  geom_text(aes(y = 0.2, label = wflow_id), angle = 90, hjust = 0) +
+  theme(legend.position = "none")
+```
 
-grid_results %>% 
-  rank_results()
+### Linear Support Vector Machine
+```{r}
+autoplot(grid_results, id = 'pca_svm', metric = 'roc_auc')
 ```
 
 ### Elastic Net Logistic Regression
 ```{r}
-autoplot(grid_results, id = 'corr_log_reg')
-```
-
-### K-Nearest Neighbors
-```{r}
-autoplot(grid_results, id = 'corr_knn')
-```
-
-### Random Forest
-```{r}
-autoplot(grid_results, id = 'simple_random_forest')
-
-rf_wf <- grid_results %>% 
-  extract_workflow_set_result(id ='simple_random_forest')
-
-rf_wf 
+autoplot(grid_results, id = 'pca_log_reg', metric = 'roc_auc')
 ```
 
 
