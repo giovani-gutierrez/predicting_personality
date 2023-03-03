@@ -5,7 +5,6 @@ date: "2023-02-15"
 output: 
   github_document:
     toc: true
-    df_print: paged
     number_sections: true
     keep_html: true
 
@@ -216,7 +215,9 @@ person_split <- initial_split(data = data1, prop = 0.80, strata = e_i) # initial
 person_train <- training(person_split) # training set
 person_test <- testing(person_split) # testing set
 
-person_folds <- vfold_cv(person_train, v = 10, strata = e_i) # 10-fold cross validation
+person_folds <- vfold_cv(person_train, 
+                         v = 10,
+                         strata = e_i) # 10-fold cross validation
 ```
 
 ## Recipe Building & Workflow
@@ -237,12 +238,12 @@ pca_rec <-
   step_corr(all_numeric_predictors(),
             threshold = tune()) %>% 
   step_zv(all_numeric_predictors()) %>% 
-  step_YeoJohnson(all_numeric_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
+  step_YeoJohnson(all_numeric_predictors()) %>% 
+  step_pca(all_numeric_predictors(), 
+           num_comp = tune()) %>% 
   step_ordinalscore(activity_level) %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_pca(all_predictors(), 
-           num_comp = tune())
+  step_dummy(all_nominal_predictors())
 ```
 
 ## Model Specifications
@@ -311,7 +312,7 @@ pca_wf <-
 ```
 
 ## Workflow Map & Tuning
-```{r eval = FALSE}
+```{r eval = FALSE, echo=TRUE}
 all_workflows <-
   bind_rows(simple_wf, corr_wf, pca_wf)
 
@@ -356,11 +357,55 @@ grid_results %>%
 ### Linear Support Vector Machine
 ```{r}
 autoplot(grid_results, id = 'pca_svm', metric = 'roc_auc')
+
+best_svm <- 
+  grid_results %>% 
+  extract_workflow_set_result(id = 'pca_svm') %>% 
+  select_best(metric  = 'roc_auc')
+
+svm_test_res <- 
+  grid_results %>% 
+  extract_workflow(id = 'pca_svm') %>% 
+  finalize_workflow(best_svm) %>% 
+  last_fit(split = person_split)
+
+collect_metrics(svm_test_res)
 ```
 
-### Elastic Net Logistic Regression
+### Elastic Net Logistic Regression (`pca_rec`)
 ```{r}
 autoplot(grid_results, id = 'pca_log_reg', metric = 'roc_auc')
+
+best_log <- 
+  grid_results %>% 
+  extract_workflow_set_result(id = 'pca_log_reg') %>% 
+  select_best(metric  = 'roc_auc')
+
+log_test_res <- 
+  grid_results %>% 
+  extract_workflow(id = 'pca_log_reg') %>% 
+  finalize_workflow(best_log) %>% 
+  last_fit(split = person_split)
+
+collect_metrics(log_test_res)
+```
+
+### Elastic Net Logistic Regression (`corr_rec`)
+```{r}
+autoplot(grid_results, id = 'corr_log_reg', metric = 'roc_auc')
+
+best_log_corr <- 
+  grid_results %>% 
+  extract_workflow_set_result(id = 'corr_log_reg') %>% 
+  select_best(metric  = 'roc_auc')
+
+log_corr_test_res <- 
+  grid_results %>% 
+  extract_workflow(id = 'corr_log_reg') %>% 
+  finalize_workflow(best_log_corr) %>% 
+  last_fit(split = person_split)
+
+collect_metrics(log_corr_test_res)
 ```
 
 
