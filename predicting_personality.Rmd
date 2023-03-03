@@ -210,13 +210,13 @@ p1 + p2 + p3 + p4
 ## Data Split & *k*-Fold Cross Validation
 
 ```{r}
-person_split <- initial_split(data = data1, prop = 0.80, strata = e_i) # initial split
+person_split <- initial_split(data = data1, prop = 0.75, strata = e_i) # initial split
 
 person_train <- training(person_split) # training set
 person_test <- testing(person_split) # testing set
 
 person_folds <- vfold_cv(person_train, 
-                         v = 10,
+                         v = 5,
                          strata = e_i) # 10-fold cross validation
 ```
 
@@ -230,20 +230,16 @@ corr_rec <-
   simple_rec %>%
   step_corr(all_numeric_predictors(),
             threshold = tune()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
-  step_dummy(all_nominal_predictors())
+  step_dummy(all_nominal_predictors()) %>% 
+  step_normalize(all_numeric_predictors())
 
 pca_rec <- 
   simple_rec %>% 
-  step_corr(all_numeric_predictors(),
-            threshold = tune()) %>% 
-  step_zv(all_numeric_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
   step_YeoJohnson(all_numeric_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
   step_pca(all_numeric_predictors(), 
-           num_comp = tune()) %>% 
-  step_ordinalscore(activity_level) %>% 
-  step_dummy(all_nominal_predictors())
+           num_comp = tune())
 ```
 
 ## Model Specifications
@@ -354,59 +350,36 @@ grid_results %>%
   select(wflow_id, .config, roc_auc = mean, rank)
 ```
 
-### Linear Support Vector Machine
 ```{r}
-autoplot(grid_results, id = 'pca_svm', metric = 'roc_auc')
+autoplot(grid_results, id = "corr_knn", metric = "roc_auc")
 
-best_svm <- 
+best_knn <- 
   grid_results %>% 
-  extract_workflow_set_result(id = 'pca_svm') %>% 
-  select_best(metric  = 'roc_auc')
+  extract_workflow_set_result(id ='corr_knn') %>% 
+  select_by_one_std_err(metric = 'roc_auc', -neighbors)
 
-svm_test_res <- 
+final_wf <- 
   grid_results %>% 
-  extract_workflow(id = 'pca_svm') %>% 
-  finalize_workflow(best_svm) %>% 
-  last_fit(split = person_split)
+  extract_workflow(id = 'corr_knn') %>% 
+  finalize_workflow(best_knn)
 
-collect_metrics(svm_test_res)
+final_fit <- fit(final_wf, data = person_train)
+
+augment(final_fit, new_data = person_test) %>% 
+  roc_auc(truth = e_i, estimate = .pred_Extrovert)
+
+augment(final_fit, new_data = person_test) %>% 
+  accuracy(truth = e_i, estimate = .pred_class)
+
+augment(final_fit, new_data = person_test) %>% 
+  conf_mat(truth = e_i, estimate = .pred_class) %>% 
+  autoplot(type = 'heatmap')
+
+augment(final_fit, new_data = person_test) %>% 
+  roc_curve(truth = e_i, estimate = .pred_Extrovert) %>% 
+  autoplot()
 ```
 
-### Elastic Net Logistic Regression (`pca_rec`)
-```{r}
-autoplot(grid_results, id = 'pca_log_reg', metric = 'roc_auc')
-
-best_log <- 
-  grid_results %>% 
-  extract_workflow_set_result(id = 'pca_log_reg') %>% 
-  select_best(metric  = 'roc_auc')
-
-log_test_res <- 
-  grid_results %>% 
-  extract_workflow(id = 'pca_log_reg') %>% 
-  finalize_workflow(best_log) %>% 
-  last_fit(split = person_split)
-
-collect_metrics(log_test_res)
-```
-
-### Elastic Net Logistic Regression (`corr_rec`)
-```{r}
-autoplot(grid_results, id = 'corr_log_reg', metric = 'roc_auc')
-
-best_log_corr <- 
-  grid_results %>% 
-  extract_workflow_set_result(id = 'corr_log_reg') %>% 
-  select_best(metric  = 'roc_auc')
-
-log_corr_test_res <- 
-  grid_results %>% 
-  extract_workflow(id = 'corr_log_reg') %>% 
-  finalize_workflow(best_log_corr) %>% 
-  last_fit(split = person_split)
-
-collect_metrics(log_corr_test_res)
-```
 
 
 
