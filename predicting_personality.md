@@ -46,9 +46,12 @@ Giovani Gutierrez
     - <a href="#431-linear-support-vector-machine"
       id="toc-431-linear-support-vector-machine">4.3.1 Linear Support Vector
       Machine</a>
-    - <a href="#432-elastic-net-logistic-regression"
-      id="toc-432-elastic-net-logistic-regression">4.3.2 Elastic Net Logistic
-      Regression</a>
+    - <a href="#432-elastic-net-logistic-regression-pca_rec"
+      id="toc-432-elastic-net-logistic-regression-pca_rec">4.3.2 Elastic Net
+      Logistic Regression (<code>pca_rec</code>)</a>
+    - <a href="#433-elastic-net-logistic-regression-corr_rec"
+      id="toc-433-elastic-net-logistic-regression-corr_rec">4.3.3 Elastic Net
+      Logistic Regression (<code>corr_rec</code>)</a>
 
 # 1 Getting Started
 
@@ -68,7 +71,7 @@ library(kknn)
 library(ranger)
 library(vip)
 library(kernlab)
-library(xgboost)
+library(stacks)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -87,13 +90,22 @@ data1 %>%
 head(data1)  # preview data
 ```
 
-<div data-pagedtable="false">
-
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["number_1"],"name":[1],"type":["chr"],"align":["left"]},{"label":["age"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["height"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["weight"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["sex"],"name":[5],"type":["chr"],"align":["left"]},{"label":["activity_level"],"name":[6],"type":["chr"],"align":["left"]},{"label":["pain_1"],"name":[7],"type":["chr"],"align":["left"]},{"label":["pain_2"],"name":[8],"type":["chr"],"align":["left"]},{"label":["pain_3"],"name":[9],"type":["chr"],"align":["left"]},{"label":["pain_4"],"name":[10],"type":["chr"],"align":["left"]},{"label":["mbti"],"name":[11],"type":["chr"],"align":["left"]},{"label":["e"],"name":[12],"type":["chr"],"align":["left"]},{"label":["i"],"name":[13],"type":["chr"],"align":["left"]},{"label":["s"],"name":[14],"type":["chr"],"align":["left"]},{"label":["n"],"name":[15],"type":["chr"],"align":["left"]},{"label":["t"],"name":[16],"type":["chr"],"align":["left"]},{"label":["f"],"name":[17],"type":["chr"],"align":["left"]},{"label":["j"],"name":[18],"type":["chr"],"align":["left"]},{"label":["p"],"name":[19],"type":["chr"],"align":["left"]},{"label":["posture"],"name":[20],"type":["chr"],"align":["left"]},{"label":["number_21"],"name":[21],"type":["chr"],"align":["left"]},{"label":["l1"],"name":[22],"type":["chr"],"align":["left"]},{"label":["l2_d"],"name":[23],"type":["chr"],"align":["left"]},{"label":["l3"],"name":[24],"type":["chr"],"align":["left"]},{"label":["l4_d"],"name":[25],"type":["dbl"],"align":["right"]},{"label":["l5"],"name":[26],"type":["chr"],"align":["left"]},{"label":["l6_d"],"name":[27],"type":["dbl"],"align":["right"]},{"label":["l7"],"name":[28],"type":["chr"],"align":["left"]},{"label":["l8_d"],"name":[29],"type":["dbl"],"align":["right"]},{"label":["l9"],"name":[30],"type":["chr"],"align":["left"]},{"label":["l10_d"],"name":[31],"type":["chr"],"align":["left"]},{"label":["l11"],"name":[32],"type":["chr"],"align":["left"]},{"label":["l12_i"],"name":[33],"type":["dbl"],"align":["right"]},{"label":["l13"],"name":[34],"type":["chr"],"align":["left"]},{"label":["l14_i"],"name":[35],"type":["chr"],"align":["left"]},{"label":["l15"],"name":[36],"type":["chr"],"align":["left"]},{"label":["l16_i"],"name":[37],"type":["dbl"],"align":["right"]},{"label":["l17"],"name":[38],"type":["chr"],"align":["left"]},{"label":["l18_i"],"name":[39],"type":["dbl"],"align":["right"]},{"label":["l19"],"name":[40],"type":["chr"],"align":["left"]},{"label":["l20_i"],"name":[41],"type":["dbl"],"align":["right"]},{"label":["l21"],"name":[42],"type":["chr"],"align":["left"]},{"label":["l22_i"],"name":[43],"type":["dbl"],"align":["right"]},{"label":["l23"],"name":[44],"type":["chr"],"align":["left"]},{"label":["l24_i"],"name":[45],"type":["chr"],"align":["left"]},{"label":["l25_i"],"name":[46],"type":["dbl"],"align":["right"]},{"label":["l26"],"name":[47],"type":["dbl"],"align":["right"]},{"label":["l27"],"name":[48],"type":["dbl"],"align":["right"]},{"label":["l28"],"name":[49],"type":["dbl"],"align":["right"]},{"label":["l29"],"name":[50],"type":["chr"],"align":["left"]},{"label":["l30"],"name":[51],"type":["chr"],"align":["left"]},{"label":["l31"],"name":[52],"type":["dbl"],"align":["right"]},{"label":["l32"],"name":[53],"type":["dbl"],"align":["right"]},{"label":["l33"],"name":[54],"type":["chr"],"align":["left"]},{"label":["l34"],"name":[55],"type":["dbl"],"align":["right"]},{"label":["l35"],"name":[56],"type":["chr"],"align":["left"]},{"label":["l36"],"name":[57],"type":["dbl"],"align":["right"]},{"label":["l37"],"name":[58],"type":["dbl"],"align":["right"]},{"label":["l38"],"name":[59],"type":["chr"],"align":["left"]},{"label":["l39"],"name":[60],"type":["chr"],"align":["left"]},{"label":["l40"],"name":[61],"type":["chr"],"align":["left"]},{"label":["l41"],"name":[62],"type":["chr"],"align":["left"]},{"label":["l42"],"name":[63],"type":["chr"],"align":["left"]},{"label":["l43"],"name":[64],"type":["chr"],"align":["left"]},{"label":["l44"],"name":[65],"type":["chr"],"align":["left"]},{"label":["l45"],"name":[66],"type":["chr"],"align":["left"]}],"data":[{"1":"1","2":"53","3":"62","4":"125","5":"Female","6":"Low","7":"0","8":"0","9":"0","10":"0","11":"ESFJ","12":"18","13":"3","14":"17","15":"9","16":"9","17":"13","18":"18","19":"4","20":"A","21":"1","22":"A","23":"4.7000000000000002","24":"A","25":"3.3","26":"A","27":"5.3","28":"P","29":"2.6","30":"A","31":"12.0","32":"A","33":"1.3","34":"A","35":"0.90000000000000002","36":"A","37":"0.0","38":"A","39":"0.5","40":"P","41":"0.5","42":"L","43":"0.5","44":"A","45":"0.59999999999999998","46":"0.8","47":"10.1","48":"0.4","49":"0.4","50":"P","51":"56.100000000000001","52":"12.6","53":"72.3","54":"0.29999999999999999","55":"2.1","56":"P","57":"364.10","58":"81.8","59":"NA","60":"NA","61":"NA","62":"NA","63":"NA","64":"NA","65":"NA","66":"NA"},{"1":"3","2":"30","3":"69","4":"200","5":"Male","6":"High","7":"0","8":"0","9":"0","10":"0","11":"ESTJ","12":"15","13":"6","14":"16","15":"10","16":"15","17":"9","18":"12","19":"10","20":"A","21":"3","22":"A","23":"27.300000000000001","24":"P","25":"5.2","26":"P","27":"0.3","28":"A","29":"3.8","30":"A","31":"12","32":"A","33":"2.7","34":"A","35":"0.0","36":"A","37":"1.4","38":"A","39":"0.9","40":"A","41":"1.0","42":"NA","43":"0.0","44":"A","45":"0.69999999999999996","46":"0.7","47":"16.2","48":"2.7","49":"4.9","50":"P","51":"194.80000000000001","52":"43.8","53":"115.6","54":"0.10000000000000001","55":"1.2","56":"A","57":"537.60","58":"120.8","59":"X","60":"NA","61":"NA","62":"NA","63":"NA","64":"NA","65":"NA","66":"NA"},{"1":"5","2":"45","3":"63","4":"199","5":"Female","6":"Moderate","7":"4","8":"5","9":"2","10":"2","11":"ENFJ","12":"14","13":"7","14":"20","15":"6","16":"9","17":"15","18":"16","19":"6","20":"A","21":"5","22":"A","23":"2.5","24":"A","25":"2.0","26":"A","27":"2.6","28":"A","29":"1.4","30":"A","31":"20.100000000000001","32":"A","33":"1.0","34":"A","35":"0.90000000000000002","36":"A","37":"0.3","38":"A","39":"1.0","40":"A","41":"0.3","42":"NA","43":"0.0","44":"A","45":"0.80000000000000004","46":"0.8","47":"16.1","48":"0.2","49":"0.3","50":"P","51":"79.900000000000006","52":"18.0","53":"115.0","54":"0","55":"0.4","56":"A","57":"520.10","58":"116.9","59":"NA","60":"NA","61":"NA","62":"NA","63":"NA","64":"X","65":"X","66":"X"},{"1":"15","2":"30","3":"69","4":"190","5":"Male","6":"Moderate","7":"0","8":"0","9":"4","10":"7","11":"ESTP","12":"20","13":"1","14":"22","15":"4","16":"13","17":"11","18":"7","19":"15","20":"A","21":"16","22":"A","23":"8.5","24":"A","25":"4.0","26":"A","27":"2.0","28":"P","29":"1.5","30":"A","31":"15.300000000000001","32":"A","33":"1.8","34":"A","35":"1.1000000000000001","36":"P","37":"0.0","38":"A","39":"0.1","40":"P","41":"0.3","42":"L","43":"0.1","44":"A","45":"0.5","46":"0.5","47":"15.4","48":"0.7","49":"1.1","50":"P","51":"96.090000000000003","52":"21.8","53":"109.8","54":"0.59999999999999998","55":"7.4","56":"P","57":"637.10","58":"143.2","59":"NA","60":"NA","61":"NA","62":"NA","63":"NA","64":"NA","65":"NA","66":"NA"},{"1":"17","2":"59","3":"66","4":"138","5":"Female","6":"Low","7":"6","8":"3","9":"6","10":"6","11":"ESTJ","12":"12","13":"9","14":"18","15":"8","16":"14","17":"10","18":"20","19":"2","20":"A","21":"19","22":"A","23":"0.5","24":"P","25":"1.1","26":"A","27":"0.3","28":"A","29":"4.0","30":"A","31":"12.1","32":"A","33":"0.4","34":"A","35":"0.40000000000000002","36":"A","37":"0.7","38":"A","39":"1.0","40":"A","41":"0.9","42":"L","43":"0.5","44":"A","45":"0.59999999999999998","46":"0.8","47":"11.2","48":"0.0","49":"0.1","50":"P","51":"51.100000000000001","52":"11.5","53":"79.8","54":"0.29999999999999999","55":"2.9","56":"A","57":"412.00","58":"92.6","59":"NA","60":"NA","61":"NA","62":"NA","63":"NA","64":"NA","65":"NA","66":"NA"},{"1":"27","2":"36","3":"68","4":"165","5":"Male","6":"High","7":"0","8":"2","9":"0","10":"0","11":"ESTP","12":"16","13":"5","14":"20","15":"6","16":"15","17":"9","18":"7","19":"15","20":"A","21":"29","22":"A","23":"14","24":"P","25":"2.6","26":"A","27":"1.6","28":"A","29":"1.0","30":"A","31":"14.199999999999999","32":"A","33":"1.2","34":"P","35":"0.10000000000000001","36":"A","37":"0.6","38":"A","39":"0.6","40":"A","41":"0.2","42":"L","43":"0.2","44":"A","45":"0.40000000000000002","46":"0.4","47":"13.4","48":"1.3","49":"1.9","50":"P","51":"107.59999999999999","52":"24.2","53":"95.4","54":"0.20000000000000001","55":"2.3","56":"A","57":"469.05","58":"105.5","59":"X","60":"NA","61":"NA","62":"NA","63":"NA","64":"NA","65":"NA","66":"NA"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-
-</div>
+    ## # A tibble: 6 × 66
+    ##   number_1   age height weight sex    activi…¹ pain_1 pain_2 pain_3 pain_4 mbti 
+    ##   <chr>    <dbl>  <dbl>  <dbl> <chr>  <chr>    <chr>  <chr>  <chr>  <chr>  <chr>
+    ## 1 1           53     62    125 Female Low      0      0      0      0      ESFJ 
+    ## 2 3           30     69    200 Male   High     0      0      0      0      ESTJ 
+    ## 3 5           45     63    199 Female Moderate 4      5      2      2      ENFJ 
+    ## 4 15          30     69    190 Male   Moderate 0      0      4      7      ESTP 
+    ## 5 17          59     66    138 Female Low      6      3      6      6      ESTJ 
+    ## 6 27          36     68    165 Male   High     0      2      0      0      ESTP 
+    ## # … with 55 more variables: e <chr>, i <chr>, s <chr>, n <chr>, t <chr>,
+    ## #   f <chr>, j <chr>, p <chr>, posture <chr>, number_21 <chr>, l1 <chr>,
+    ## #   l2_d <chr>, l3 <chr>, l4_d <dbl>, l5 <chr>, l6_d <dbl>, l7 <chr>,
+    ## #   l8_d <dbl>, l9 <chr>, l10_d <chr>, l11 <chr>, l12_i <dbl>, l13 <chr>,
+    ## #   l14_i <chr>, l15 <chr>, l16_i <dbl>, l17 <chr>, l18_i <dbl>, l19 <chr>,
+    ## #   l20_i <dbl>, l21 <chr>, l22_i <dbl>, l23 <chr>, l24_i <chr>, l25_i <dbl>,
+    ## #   l26 <dbl>, l27 <dbl>, l28 <dbl>, l29 <chr>, l30 <chr>, l31 <dbl>, …
 
 ## 1.3 Tidy Data & Missing Values
 
@@ -114,7 +126,8 @@ data1 <- data1 %>%
 
 data1 <- data1 %>%
     mutate(sex = factor(sex)) %>%
-    mutate(activity_level = factor(activity_level)) %>%
+    mutate(activity_level = ordered(activity_level, levels = c("Low", "Moderate",
+        "High"))) %>%
     mutate_at(c("pain_1", "pain_2", "pain_3", "pain_4"), as.numeric) %>%
     mutate(e_i = factor(ifelse(e > i, "Extrovert", "Introvert"))) %>%
     mutate_at(c("s", "n", "t", "f", "j", "p"), as.numeric) %>%
@@ -134,13 +147,17 @@ data1 %>%
 head(data1)  # preview cleaned data
 ```
 
-<div data-pagedtable="false">
-
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["age"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["height"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["weight"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["sex"],"name":[4],"type":["fct"],"align":["left"]},{"label":["activity_level"],"name":[5],"type":["fct"],"align":["left"]},{"label":["pain_1"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["pain_2"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["pain_3"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["pain_4"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["s"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["n"],"name":[11],"type":["dbl"],"align":["right"]},{"label":["t"],"name":[12],"type":["dbl"],"align":["right"]},{"label":["f"],"name":[13],"type":["dbl"],"align":["right"]},{"label":["j"],"name":[14],"type":["dbl"],"align":["right"]},{"label":["p"],"name":[15],"type":["dbl"],"align":["right"]},{"label":["posture"],"name":[16],"type":["fct"],"align":["left"]},{"label":["e_i"],"name":[17],"type":["fct"],"align":["left"]}],"data":[{"1":"53","2":"62","3":"125","4":"Female","5":"Low","6":"0","7":"0","8":"0","9":"0","10":"17","11":"9","12":"9","13":"13","14":"18","15":"4","16":"A","17":"Introvert"},{"1":"30","2":"69","3":"200","4":"Male","5":"High","6":"0","7":"0","8":"0","9":"0","10":"16","11":"10","12":"15","13":"9","14":"12","15":"10","16":"A","17":"Introvert"},{"1":"45","2":"63","3":"199","4":"Female","5":"Moderate","6":"4","7":"5","8":"2","9":"2","10":"20","11":"6","12":"9","13":"15","14":"16","15":"6","16":"A","17":"Introvert"},{"1":"30","2":"69","3":"190","4":"Male","5":"Moderate","6":"0","7":"0","8":"4","9":"7","10":"22","11":"4","12":"13","13":"11","14":"7","15":"15","16":"A","17":"Extrovert"},{"1":"59","2":"66","3":"138","4":"Female","5":"Low","6":"6","7":"3","8":"6","9":"6","10":"18","11":"8","12":"14","13":"10","14":"20","15":"2","16":"A","17":"Introvert"},{"1":"36","2":"68","3":"165","4":"Male","5":"High","6":"0","7":"2","8":"0","9":"0","10":"20","11":"6","12":"15","13":"9","14":"7","15":"15","16":"A","17":"Introvert"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-
-</div>
+    ## # A tibble: 6 × 17
+    ##     age height weight sex    activity_…¹ pain_1 pain_2 pain_3 pain_4     s     n
+    ##   <dbl>  <dbl>  <dbl> <fct>  <ord>        <dbl>  <dbl>  <dbl>  <dbl> <dbl> <dbl>
+    ## 1    53     62    125 Female Low              0      0      0      0    17     9
+    ## 2    30     69    200 Male   High             0      0      0      0    16    10
+    ## 3    45     63    199 Female Moderate         4      5      2      2    20     6
+    ## 4    30     69    190 Male   Moderate         0      0      4      7    22     4
+    ## 5    59     66    138 Female Low              6      3      6      6    18     8
+    ## 6    36     68    165 Male   High             0      2      0      0    20     6
+    ## # … with 6 more variables: t <dbl>, f <dbl>, j <dbl>, p <dbl>, posture <fct>,
+    ## #   e_i <fct>, and abbreviated variable name ¹​activity_level
 
 - `age`: Age of participant (in years)
 - `height`: Height of participant (in inches)
@@ -178,7 +195,7 @@ head(data1)  # preview cleaned data
 ## 2.1 Correlation Between Features
 
 ``` r
-tmwr_cols <- colorRampPalette(c("#91CBD765", "#CA225E"))
+tmwr_cols <- colorRampPalette(c("#CA225E", "#91CBD765"))
 
 data1 %>%
     select_if(is.numeric) %>%
@@ -305,6 +322,7 @@ pca_rec <- simple_rec %>%
     step_normalize(all_numeric_predictors()) %>%
     step_YeoJohnson(all_numeric_predictors()) %>%
     step_pca(all_numeric_predictors(), num_comp = tune()) %>%
+    step_ordinalscore(activity_level) %>%
     step_dummy(all_nominal_predictors())
 ```
 
@@ -343,7 +361,7 @@ log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>%
 #### 3.3.3.1 Support Vector Machine
 
 ``` r
-svm_spec <- svm_linear(cost = tune(), margin = tune()) %>%
+svm_spec <- svm_linear(cost = tune()) %>%
     set_mode("classification") %>%
     set_engine("kernlab")
 ```
@@ -370,7 +388,7 @@ all_workflows <- bind_rows(simple_wf, corr_wf, pca_wf)
 grid_ctrl <- control_grid(save_pred = TRUE, parallel_over = "everything", save_workflow = TRUE)
 
 grid_results <- all_workflows %>%
-    workflow_map(seed = 123, resamples = person_folds, grid = 8, control = grid_ctrl)
+    workflow_map(seed = 123, resamples = person_folds, grid = 10, control = grid_ctrl)
 
 grid_results %>%
     write_rds("C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_grid.rds")
@@ -387,6 +405,22 @@ autoplot(grid_results, rank_metric = "roc_auc", metric = "roc_auc", select_best 
 
 <img src="predicting_personality_files/figure-gfm/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
 
+``` r
+grid_results %>%
+    rank_results(select_best = TRUE) %>%
+    filter(.metric == "roc_auc") %>%
+    select(wflow_id, .config, roc_auc = mean, rank)
+```
+
+    ## # A tibble: 5 × 4
+    ##   wflow_id             .config               roc_auc  rank
+    ##   <chr>                <chr>                   <dbl> <int>
+    ## 1 pca_svm              Preprocessor02_Model1   0.747     1
+    ## 2 pca_log_reg          Preprocessor06_Model1   0.705     2
+    ## 3 corr_log_reg         Preprocessor08_Model1   0.668     3
+    ## 4 simple_random_forest Preprocessor1_Model05   0.598     4
+    ## 5 corr_knn             Preprocessor09_Model1   0.586     5
+
 ### 4.3.1 Linear Support Vector Machine
 
 ``` r
@@ -395,10 +429,75 @@ autoplot(grid_results, id = "pca_svm", metric = "roc_auc")
 
 <img src="predicting_personality_files/figure-gfm/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
 
-### 4.3.2 Elastic Net Logistic Regression
+``` r
+best_svm <- grid_results %>%
+    extract_workflow_set_result(id = "pca_svm") %>%
+    select_best(metric = "roc_auc")
+
+svm_test_res <- grid_results %>%
+    extract_workflow(id = "pca_svm") %>%
+    finalize_workflow(best_svm) %>%
+    last_fit(split = person_split)
+
+collect_metrics(svm_test_res)
+```
+
+    ## # A tibble: 2 × 4
+    ##   .metric  .estimator .estimate .config             
+    ##   <chr>    <chr>          <dbl> <chr>               
+    ## 1 accuracy binary         0.6   Preprocessor1_Model1
+    ## 2 roc_auc  binary         0.515 Preprocessor1_Model1
+
+### 4.3.2 Elastic Net Logistic Regression (`pca_rec`)
 
 ``` r
 autoplot(grid_results, id = "pca_log_reg", metric = "roc_auc")
 ```
 
 <img src="predicting_personality_files/figure-gfm/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
+
+``` r
+best_log <- grid_results %>%
+    extract_workflow_set_result(id = "pca_log_reg") %>%
+    select_best(metric = "roc_auc")
+
+log_test_res <- grid_results %>%
+    extract_workflow(id = "pca_log_reg") %>%
+    finalize_workflow(best_log) %>%
+    last_fit(split = person_split)
+
+collect_metrics(log_test_res)
+```
+
+    ## # A tibble: 2 × 4
+    ##   .metric  .estimator .estimate .config             
+    ##   <chr>    <chr>          <dbl> <chr>               
+    ## 1 accuracy binary         0.55  Preprocessor1_Model1
+    ## 2 roc_auc  binary         0.545 Preprocessor1_Model1
+
+### 4.3.3 Elastic Net Logistic Regression (`corr_rec`)
+
+``` r
+autoplot(grid_results, id = "corr_log_reg", metric = "roc_auc")
+```
+
+<img src="predicting_personality_files/figure-gfm/unnamed-chunk-12-1.png" style="display: block; margin: auto;" />
+
+``` r
+best_log_corr <- grid_results %>%
+    extract_workflow_set_result(id = "corr_log_reg") %>%
+    select_best(metric = "roc_auc")
+
+log_corr_test_res <- grid_results %>%
+    extract_workflow(id = "corr_log_reg") %>%
+    finalize_workflow(best_log_corr) %>%
+    last_fit(split = person_split)
+
+collect_metrics(log_corr_test_res)
+```
+
+    ## # A tibble: 2 × 4
+    ##   .metric  .estimator .estimate .config             
+    ##   <chr>    <chr>          <dbl> <chr>               
+    ## 1 accuracy binary         0.65  Preprocessor1_Model1
+    ## 2 roc_auc  binary         0.551 Preprocessor1_Model1
