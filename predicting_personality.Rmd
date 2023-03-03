@@ -40,7 +40,7 @@ library(kknn)
 library(ranger)
 library(vip)
 library(kernlab)
-library(xgboost)
+library(stacks)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -76,7 +76,7 @@ data1 <-
 data1 <- 
   data1 %>% 
   mutate(sex = factor(sex)) %>% 
-  mutate(activity_level = factor(activity_level)) %>% 
+  mutate(activity_level = ordered(activity_level, levels = c('Low', 'Moderate', 'High'))) %>% 
   mutate_at(c('pain_1', 'pain_2', 'pain_3', 'pain_4'), 
             as.numeric) %>% 
   mutate(e_i = factor(ifelse(e > i, 'Extrovert', 'Introvert'))) %>% 
@@ -117,7 +117,7 @@ head(data1) # preview cleaned data
 ## Correlation Between Features
 
 ```{r correlation plot}
-tmwr_cols <- colorRampPalette(c("#91CBD765", "#CA225E"))
+tmwr_cols <- colorRampPalette(c('#CA225E', '#91CBD765'))
 
 data1 %>% 
   select_if(is.numeric) %>% 
@@ -237,11 +237,12 @@ pca_rec <-
   step_corr(all_numeric_predictors(),
             threshold = tune()) %>% 
   step_zv(all_numeric_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
   step_YeoJohnson(all_numeric_predictors()) %>% 
-  step_pca(all_numeric_predictors(), 
-           num_comp = tune()) %>% 
-  step_dummy(all_nominal_predictors())
+  step_normalize(all_numeric_predictors()) %>% 
+  step_ordinalscore(activity_level) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_pca(all_predictors(), 
+           num_comp = tune())
 ```
 
 ## Model Specifications
@@ -279,8 +280,7 @@ log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>%
 
 #### Support Vector Machine 
 ```{r}
-svm_spec <- svm_linear(cost = tune(),
-                       margin = tune()) %>% 
+svm_spec <- svm_linear(cost = tune()) %>% 
   set_mode('classification') %>% 
   set_engine('kernlab')
 ```
@@ -326,7 +326,7 @@ grid_results <- all_workflows %>%
    workflow_map(
       seed = 123,
       resamples = person_folds,
-      grid = 8,
+      grid = 10,
       control = grid_ctrl
    )
 
@@ -346,6 +346,11 @@ autoplot(
 ) +
   geom_text(aes(y = 0.2, label = wflow_id), angle = 90, hjust = 0) +
   theme(legend.position = "none")
+
+grid_results %>% 
+  rank_results(select_best = TRUE) %>% 
+  filter(.metric == "roc_auc") %>% 
+  select(wflow_id, .config, roc_auc = mean, rank)
 ```
 
 ### Linear Support Vector Machine
@@ -357,5 +362,6 @@ autoplot(grid_results, id = 'pca_svm', metric = 'roc_auc')
 ```{r}
 autoplot(grid_results, id = 'pca_log_reg', metric = 'roc_auc')
 ```
+
 
 
