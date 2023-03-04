@@ -39,7 +39,7 @@ library(kknn)
 library(ranger)
 library(vip)
 library(kernlab)
-library(stacks)
+library(GGally)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -129,44 +129,26 @@ data1 %>%
 ```
 
 ## Visual EDA
-```{r visual eda}
-ggplot(data = data1, aes(fill = e_i, x = e_i)) + 
-  geom_bar(colour = 'black') +
-  scale_fill_brewer(palette = "Pastel1") +
-  guides(fill = FALSE) +
-  labs(x = NULL, y = 'Number of Participants')
+```{r pairs plots}
+data1 %>% 
+  select(e_i, age, height, weight) %>% 
+  ggpairs(mapping = aes(color = e_i)) +
+  scale_fill_brewer(palette = "Pastel1")
 
-ggplot(data = data1, aes(fill = sex, x = e_i)) + 
-  geom_bar(position = "fill", colour = 'black') +
-  scale_fill_brewer(palette = "Pastel1") + 
-  labs(x = NULL, y = 'Proportion of Participants', fill = 'Sex')
+data1 %>% 
+  select(e_i, pain_1, pain_2, pain_3, pain_4) %>% 
+  ggpairs(mapping = aes(color = e_i)) +
+  scale_fill_brewer(palette = "Pastel1")
 
-ggplot(data = data1, aes(fill = posture, x = e_i)) + 
-  geom_bar(position = "fill", colour = 'black') +
-  scale_fill_brewer(palette = "Pastel1") +
-  labs(x = NULL, y = 'Proportion of Participants', fill = 'Posture Type')
+data1 %>% 
+  select(e_i, posture) %>% 
+  ggpairs(mapping = aes(color = e_i)) +
+  scale_fill_brewer(palette = "Pastel1")
 
-ggplot(data = data1, aes(fill = activity_level, x = posture)) + 
-  geom_bar(position = 'fill', colour = 'black') +
-  labs(x = 'Posture Type', fill = 'Activity Level') +
-  facet_grid(. ~ e_i) +
-  scale_fill_brewer(palette = "Pastel1") +
-  labs(y = 'Proportion of Participants', fill = 'Activity Level')
-
-ggplot(data = data.frame(data1, transmute(data1, s_n = factor(ifelse(s > n, 'sensing', 'inuitive')))), aes(x = e_i, fill = s_n)) + 
-  geom_bar(position = 'fill', colour = 'black') +
-  scale_fill_brewer(palette = "Pastel1") +
-  labs(x = '', y = 'Proportion of Participants', fill = NULL)
-
-ggplot(data = data.frame(data1, transmute(data1, t_f = factor(ifelse(t > f, 'thinking', 'feeling')))), aes(x = e_i, fill = t_f)) + 
-  geom_bar(position = 'fill', colour = 'black')  +
-  scale_fill_brewer(palette = "Pastel1") +
-  labs(x = NULL, y = 'Proportion of Participants', fill = NULL)
-
-ggplot(data = data.frame(data1, transmute(data1, j_p = factor(ifelse(j > p, 'judging', 'perceiving')))), aes(x = e_i, fill = j_p)) + 
-  geom_bar(position = 'fill', color = 'black') +
-  scale_fill_brewer(palette = "Pastel1") +
-  labs(x = NULL, y = 'Proportion of Participants', fill = NULL)
+data1 %>% 
+  select(e_i, s, n, t, f, j, p) %>% 
+  ggpairs(mapping = aes(color = e_i)) +
+  scale_fill_brewer(palette = "Pastel1")
 ```
 
 ```{r pain-plots}
@@ -215,9 +197,7 @@ person_split <- initial_split(data = data1, prop = 0.75, strata = e_i) # initial
 person_train <- training(person_split) # training set
 person_test <- testing(person_split) # testing set
 
-person_folds <- vfold_cv(person_train, 
-                         v = 5,
-                         strata = e_i) # 10-fold cross validation
+person_folds <- vfold_cv(data = person_train, v = 10, strata = e_i) # 10-fold cross validation
 ```
 
 ## Recipe Building & Workflow
@@ -341,16 +321,15 @@ autoplot(
    metric = "roc_auc",
    select_best = TRUE
 ) +
-  geom_text(aes(y = 0.2, label = wflow_id), angle = 90, hjust = 0) +
+  geom_text(aes(y = mean - 0.5, label = wflow_id), angle = 90, hjust = 0.2) +
+  ylim(0, 0.8) +
   theme(legend.position = "none")
 
 grid_results %>% 
   rank_results(select_best = TRUE) %>% 
   filter(.metric == "roc_auc") %>% 
   select(wflow_id, .config, roc_auc = mean, rank)
-```
 
-```{r}
 autoplot(grid_results, id = "corr_knn", metric = "roc_auc")
 
 best_knn <- 
@@ -358,26 +337,43 @@ best_knn <-
   extract_workflow_set_result(id ='corr_knn') %>% 
   select_by_one_std_err(metric = 'roc_auc', -neighbors)
 
+knn_results <- 
+  grid_results %>% 
+  extract_workflow_set_result(id = 'corr_knn')
+
+knn_results %>% 
+  collect_predictions() %>% 
+  inner_join(best_knn) %>% 
+  conf_mat(truth = e_i, estimate = .pred_class) %>% 
+  autoplot(type = 'heatmap')
+
+knn_results %>% 
+  collect_predictions() %>% 
+  inner_join(best_knn) %>% 
+  roc_curve(truth = e_i, estimate = .pred_Extrovert) %>% 
+  autoplot()
+```
+
+```{r}
 final_wf <- 
   grid_results %>% 
   extract_workflow(id = 'corr_knn') %>% 
   finalize_workflow(best_knn)
 
-final_fit <- fit(final_wf, data = person_train)
+final_fit <- last_fit(final_wf, person_split)
 
-augment(final_fit, new_data = person_test) %>% 
-  roc_auc(truth = e_i, estimate = .pred_Extrovert)
+final_fit %>% 
+  collect_metrics()
 
-augment(final_fit, new_data = person_test) %>% 
-  accuracy(truth = e_i, estimate = .pred_class)
-
-augment(final_fit, new_data = person_test) %>% 
-  conf_mat(truth = e_i, estimate = .pred_class) %>% 
+final_fit %>% 
+  collect_predictions() %>% 
+  conf_mat(truth = e_i, estimate = .pred_class) %>%
   autoplot(type = 'heatmap')
 
-augment(final_fit, new_data = person_test) %>% 
-  roc_curve(truth = e_i, estimate = .pred_Extrovert) %>% 
-  autoplot()
+final_fit %>% 
+  collect_predictions() %>% 
+  roc_curve(truth = e_i, estimate = .pred_Extrovert) %>%
+  autoplot()  
 ```
 
 
