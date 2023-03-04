@@ -43,15 +43,6 @@ Giovani Gutierrez
     Workflow Map &amp; Tuning</a>
   - <a href="#43-evaluation-of-models" id="toc-43-evaluation-of-models">4.3
     Evaluation of Models</a>
-    - <a href="#431-linear-support-vector-machine"
-      id="toc-431-linear-support-vector-machine">4.3.1 Linear Support Vector
-      Machine</a>
-    - <a href="#432-elastic-net-logistic-regression-pca_rec"
-      id="toc-432-elastic-net-logistic-regression-pca_rec">4.3.2 Elastic Net
-      Logistic Regression (<code>pca_rec</code>)</a>
-    - <a href="#433-elastic-net-logistic-regression-corr_rec"
-      id="toc-433-elastic-net-logistic-regression-corr_rec">4.3.3 Elastic Net
-      Logistic Regression (<code>corr_rec</code>)</a>
 
 # 1 Getting Started
 
@@ -71,7 +62,7 @@ library(kknn)
 library(ranger)
 library(vip)
 library(kernlab)
-library(stacks)
+library(GGally)
 tidymodels_prefer()
 theme_set(theme_bw())
 
@@ -209,63 +200,36 @@ data1 %>%
 ## 2.2 Visual EDA
 
 ``` r
-ggplot(data = data1, aes(fill = e_i, x = e_i)) + geom_bar(colour = "black") + scale_fill_brewer(palette = "Pastel1") +
-    guides(fill = FALSE) + labs(x = NULL, y = "Number of Participants")
+data1 %>%
+    select(e_i, age, height, weight) %>%
+    ggpairs(mapping = aes(color = e_i)) + scale_fill_brewer(palette = "Pastel1")
 ```
 
-<img src="predicting_personality_files/figure-gfm/visual eda-1.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/pairs plots-1.png" style="display: block; margin: auto;" />
 
 ``` r
-ggplot(data = data1, aes(fill = sex, x = e_i)) + geom_bar(position = "fill", colour = "black") +
-    scale_fill_brewer(palette = "Pastel1") + labs(x = NULL, y = "Proportion of Participants",
-    fill = "Sex")
+data1 %>%
+    select(e_i, pain_1, pain_2, pain_3, pain_4) %>%
+    ggpairs(mapping = aes(color = e_i)) + scale_fill_brewer(palette = "Pastel1")
 ```
 
-<img src="predicting_personality_files/figure-gfm/visual eda-2.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/pairs plots-2.png" style="display: block; margin: auto;" />
 
 ``` r
-ggplot(data = data1, aes(fill = posture, x = e_i)) + geom_bar(position = "fill",
-    colour = "black") + scale_fill_brewer(palette = "Pastel1") + labs(x = NULL, y = "Proportion of Participants",
-    fill = "Posture Type")
+data1 %>%
+    select(e_i, posture) %>%
+    ggpairs(mapping = aes(color = e_i)) + scale_fill_brewer(palette = "Pastel1")
 ```
 
-<img src="predicting_personality_files/figure-gfm/visual eda-3.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/pairs plots-3.png" style="display: block; margin: auto;" />
 
 ``` r
-ggplot(data = data1, aes(fill = activity_level, x = posture)) + geom_bar(position = "fill",
-    colour = "black") + labs(x = "Posture Type", fill = "Activity Level") + facet_grid(. ~
-    e_i) + scale_fill_brewer(palette = "Pastel1") + labs(y = "Proportion of Participants",
-    fill = "Activity Level")
+data1 %>%
+    select(e_i, s, n, t, f, j, p) %>%
+    ggpairs(mapping = aes(color = e_i)) + scale_fill_brewer(palette = "Pastel1")
 ```
 
-<img src="predicting_personality_files/figure-gfm/visual eda-4.png" style="display: block; margin: auto;" />
-
-``` r
-ggplot(data = data.frame(data1, transmute(data1, s_n = factor(ifelse(s > n, "sensing",
-    "inuitive")))), aes(x = e_i, fill = s_n)) + geom_bar(position = "fill", colour = "black") +
-    scale_fill_brewer(palette = "Pastel1") + labs(x = "", y = "Proportion of Participants",
-    fill = NULL)
-```
-
-<img src="predicting_personality_files/figure-gfm/visual eda-5.png" style="display: block; margin: auto;" />
-
-``` r
-ggplot(data = data.frame(data1, transmute(data1, t_f = factor(ifelse(t > f, "thinking",
-    "feeling")))), aes(x = e_i, fill = t_f)) + geom_bar(position = "fill", colour = "black") +
-    scale_fill_brewer(palette = "Pastel1") + labs(x = NULL, y = "Proportion of Participants",
-    fill = NULL)
-```
-
-<img src="predicting_personality_files/figure-gfm/visual eda-6.png" style="display: block; margin: auto;" />
-
-``` r
-ggplot(data = data.frame(data1, transmute(data1, j_p = factor(ifelse(j > p, "judging",
-    "perceiving")))), aes(x = e_i, fill = j_p)) + geom_bar(position = "fill", color = "black") +
-    scale_fill_brewer(palette = "Pastel1") + labs(x = NULL, y = "Proportion of Participants",
-    fill = NULL)
-```
-
-<img src="predicting_personality_files/figure-gfm/visual eda-7.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/pairs plots-4.png" style="display: block; margin: auto;" />
 
 ``` r
 p1 <- ggplot(data = data1, aes(x = posture, y = pain_1, fill = posture)) + geom_boxplot(color = "black") +
@@ -298,12 +262,12 @@ p1 + p2 + p3 + p4
 ## 3.1 Data Split & *k*-Fold Cross Validation
 
 ``` r
-person_split <- initial_split(data = data1, prop = 0.8, strata = e_i)  # initial split
+person_split <- initial_split(data = data1, prop = 0.75, strata = e_i)  # initial split
 
 person_train <- training(person_split)  # training set
 person_test <- testing(person_split)  # testing set
 
-person_folds <- vfold_cv(person_train, v = 10, strata = e_i)  # 10-fold cross validation
+person_folds <- vfold_cv(data = person_train, v = 10, strata = e_i)  # 10-fold cross validation
 ```
 
 ## 3.2 Recipe Building & Workflow
@@ -313,17 +277,14 @@ simple_rec <- recipe(e_i ~ ., data = person_train)
 
 corr_rec <- simple_rec %>%
     step_corr(all_numeric_predictors(), threshold = tune()) %>%
-    step_normalize(all_numeric_predictors()) %>%
-    step_dummy(all_nominal_predictors())
+    step_dummy(all_nominal_predictors()) %>%
+    step_normalize(all_numeric_predictors())
 
 pca_rec <- simple_rec %>%
-    step_corr(all_numeric_predictors(), threshold = tune()) %>%
-    step_zv(all_numeric_predictors()) %>%
-    step_normalize(all_numeric_predictors()) %>%
+    step_dummy(all_nominal_predictors()) %>%
     step_YeoJohnson(all_numeric_predictors()) %>%
-    step_pca(all_numeric_predictors(), num_comp = tune()) %>%
-    step_ordinalscore(activity_level) %>%
-    step_dummy(all_nominal_predictors())
+    step_normalize(all_numeric_predictors()) %>%
+    step_pca(all_numeric_predictors(), num_comp = tune())
 ```
 
 ## 3.3 Model Specifications
@@ -400,7 +361,8 @@ grid_results %>%
 grid_results <- read_rds(file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_grid.rds")
 
 autoplot(grid_results, rank_metric = "roc_auc", metric = "roc_auc", select_best = TRUE) +
-    geom_text(aes(y = 0.2, label = wflow_id), angle = 90, hjust = 0) + theme(legend.position = "none")
+    geom_text(aes(y = mean - 0.5, label = wflow_id), angle = 90, hjust = 0.2) + ylim(0,
+    0.8) + theme(legend.position = "none")
 ```
 
 <img src="predicting_personality_files/figure-gfm/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
@@ -415,89 +377,76 @@ grid_results %>%
     ## # A tibble: 5 × 4
     ##   wflow_id             .config               roc_auc  rank
     ##   <chr>                <chr>                   <dbl> <int>
-    ## 1 pca_svm              Preprocessor02_Model1   0.747     1
-    ## 2 pca_log_reg          Preprocessor06_Model1   0.705     2
-    ## 3 corr_log_reg         Preprocessor08_Model1   0.668     3
-    ## 4 simple_random_forest Preprocessor1_Model05   0.598     4
-    ## 5 corr_knn             Preprocessor09_Model1   0.586     5
-
-### 4.3.1 Linear Support Vector Machine
+    ## 1 corr_knn             Preprocessor08_Model1   0.594     1
+    ## 2 pca_svm              Preprocessor1_Model2    0.568     2
+    ## 3 pca_log_reg          Preprocessor2_Model2    0.564     3
+    ## 4 corr_log_reg         Preprocessor02_Model1   0.553     4
+    ## 5 simple_random_forest Preprocessor1_Model05   0.511     5
 
 ``` r
-autoplot(grid_results, id = "pca_svm", metric = "roc_auc")
+autoplot(grid_results, id = "corr_knn", metric = "roc_auc")
 ```
 
-<img src="predicting_personality_files/figure-gfm/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/unnamed-chunk-9-2.png" style="display: block; margin: auto;" />
 
 ``` r
-best_svm <- grid_results %>%
-    extract_workflow_set_result(id = "pca_svm") %>%
-    select_best(metric = "roc_auc")
+best_knn <- grid_results %>%
+    extract_workflow_set_result(id = "corr_knn") %>%
+    select_by_one_std_err(metric = "roc_auc", -neighbors)
 
-svm_test_res <- grid_results %>%
-    extract_workflow(id = "pca_svm") %>%
-    finalize_workflow(best_svm) %>%
-    last_fit(split = person_split)
+knn_results <- grid_results %>%
+    extract_workflow_set_result(id = "corr_knn")
 
-collect_metrics(svm_test_res)
+knn_results %>%
+    collect_predictions() %>%
+    inner_join(best_knn) %>%
+    conf_mat(truth = e_i, estimate = .pred_class) %>%
+    autoplot(type = "heatmap")
+```
+
+<img src="predicting_personality_files/figure-gfm/unnamed-chunk-9-3.png" style="display: block; margin: auto;" />
+
+``` r
+knn_results %>%
+    collect_predictions() %>%
+    inner_join(best_knn) %>%
+    roc_curve(truth = e_i, estimate = .pred_Extrovert) %>%
+    autoplot()
+```
+
+<img src="predicting_personality_files/figure-gfm/unnamed-chunk-9-4.png" style="display: block; margin: auto;" />
+
+``` r
+final_wf <- grid_results %>%
+    extract_workflow(id = "corr_knn") %>%
+    finalize_workflow(best_knn)
+
+final_fit <- last_fit(final_wf, person_split)
+
+final_fit %>%
+    collect_metrics()
 ```
 
     ## # A tibble: 2 × 4
     ##   .metric  .estimator .estimate .config             
     ##   <chr>    <chr>          <dbl> <chr>               
     ## 1 accuracy binary         0.6   Preprocessor1_Model1
-    ## 2 roc_auc  binary         0.515 Preprocessor1_Model1
-
-### 4.3.2 Elastic Net Logistic Regression (`pca_rec`)
+    ## 2 roc_auc  binary         0.554 Preprocessor1_Model1
 
 ``` r
-autoplot(grid_results, id = "pca_log_reg", metric = "roc_auc")
+final_fit %>%
+    collect_predictions() %>%
+    conf_mat(truth = e_i, estimate = .pred_class) %>%
+    autoplot(type = "heatmap")
 ```
 
-<img src="predicting_personality_files/figure-gfm/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
 
 ``` r
-best_log <- grid_results %>%
-    extract_workflow_set_result(id = "pca_log_reg") %>%
-    select_best(metric = "roc_auc")
-
-log_test_res <- grid_results %>%
-    extract_workflow(id = "pca_log_reg") %>%
-    finalize_workflow(best_log) %>%
-    last_fit(split = person_split)
-
-collect_metrics(log_test_res)
+final_fit %>%
+    collect_predictions() %>%
+    roc_curve(truth = e_i, estimate = .pred_Extrovert) %>%
+    autoplot()
 ```
 
-    ## # A tibble: 2 × 4
-    ##   .metric  .estimator .estimate .config             
-    ##   <chr>    <chr>          <dbl> <chr>               
-    ## 1 accuracy binary         0.55  Preprocessor1_Model1
-    ## 2 roc_auc  binary         0.545 Preprocessor1_Model1
-
-### 4.3.3 Elastic Net Logistic Regression (`corr_rec`)
-
-``` r
-autoplot(grid_results, id = "corr_log_reg", metric = "roc_auc")
-```
-
-<img src="predicting_personality_files/figure-gfm/unnamed-chunk-12-1.png" style="display: block; margin: auto;" />
-
-``` r
-best_log_corr <- grid_results %>%
-    extract_workflow_set_result(id = "corr_log_reg") %>%
-    select_best(metric = "roc_auc")
-
-log_corr_test_res <- grid_results %>%
-    extract_workflow(id = "corr_log_reg") %>%
-    finalize_workflow(best_log_corr) %>%
-    last_fit(split = person_split)
-
-collect_metrics(log_corr_test_res)
-```
-
-    ## # A tibble: 2 × 4
-    ##   .metric  .estimator .estimate .config             
-    ##   <chr>    <chr>          <dbl> <chr>               
-    ## 1 accuracy binary         0.65  Preprocessor1_Model1
-    ## 2 roc_auc  binary         0.551 Preprocessor1_Model1
+<img src="predicting_personality_files/figure-gfm/unnamed-chunk-10-2.png" style="display: block; margin: auto;" />
