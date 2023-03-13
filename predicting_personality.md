@@ -13,10 +13,11 @@ Giovani Gutierrez
 - <a href="#2-exploratory-data-analysis-eda"
   id="toc-2-exploratory-data-analysis-eda">2 Exploratory Data Analysis
   (EDA)</a>
-  - <a href="#21-correlation-between-features"
-    id="toc-21-correlation-between-features">2.1 Correlation Between
+  - <a href="#21-codebook" id="toc-21-codebook">2.1 Codebook</a>
+  - <a href="#22-correlation-between-features"
+    id="toc-22-correlation-between-features">2.2 Correlation Between
     Features</a>
-  - <a href="#22-visual-eda" id="toc-22-visual-eda">2.2 Visual EDA</a>
+  - <a href="#23-visual-eda" id="toc-23-visual-eda">2.3 Visual EDA</a>
 - <a href="#3-model-setup" id="toc-3-model-setup">3 Model Setup</a>
   - <a href="#31-data-split--k-fold-cross-validation"
     id="toc-31-data-split--k-fold-cross-validation">3.1 Data Split &amp;
@@ -43,6 +44,9 @@ Giovani Gutierrez
     Workflow Map &amp; Tuning</a>
   - <a href="#43-evaluation-of-models" id="toc-43-evaluation-of-models">4.3
     Evaluation of Models</a>
+  - <a href="#44-model-evaluation-on-testing-data"
+    id="toc-44-model-evaluation-on-testing-data">4.4 Model Evaluation on
+    Testing Data</a>
 
 # 1 Getting Started
 
@@ -72,11 +76,11 @@ set.seed(123)  # set seed
 ## 1.2 Import Data
 
 ``` r
-data1 <- read_xls("C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/Posture_Data.xls") %>%
+data1 <- read_xls("Data/Posture_Data.xls") %>%
     clean_names()  # read in raw data from .xls file
 
 data1 %>%
-    write.csv(file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/raw_data.csv")  # write raw data to .csv file
+    write.csv(file = "Data/raw_data.csv")  # write raw data to .csv file
 
 head(data1)  # preview data
 ```
@@ -133,7 +137,7 @@ data1 %>%
 
 ``` r
 data1 %>%
-    write.csv(file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/clean_data.csv")  # write clean data to .csv file
+    write.csv(file = "Data/clean_data.csv")  # write clean data to .csv file
 
 head(data1)  # preview cleaned data
 ```
@@ -150,40 +154,42 @@ head(data1)  # preview cleaned data
     ## # … with 6 more variables: t <dbl>, f <dbl>, j <dbl>, p <dbl>, posture <fct>,
     ## #   e_i <fct>, and abbreviated variable name ¹​activity_level
 
-- `age`: Age of participant (in years)
-- `height`: Height of participant (in inches)
-- `weight`: Weight of participant (in pounds)
-- `sex`: Sex of the participant (male or female)
-- `activity_level`: Amount of daily physical activity performed by a
-  participant (low, moderate, or high)
-- `pain_1`: Pain in the neck reported on a scale from 0 (low) to 10
-  (high) by a participant
-- `pain_2`: Pain in the thoracic reported on a scale from 0 (low) to 10
-  (high) by a participant
-- `pain_3`: Pain in the lumbar reported on a scale from 0 (low) to 10
-  (high) by the participant
-- `pain_4`: Pain in the sacrum reported on a scale from 0 (low) to 10
-  (high) by the participant
-- `s`: A participant’s sensing characteristic on a scale from 1 (low) to
-  26 (high)
-- `i`: A participant’s intuition characteristic on a scale from 1 (low)
-  to 26 (high)
-- `t`: A participant’s thinking characteristic on a scale from 1 (low)
-  to 26 (high)
-- `f`: A participant’s feeling characteristic on a scale from 1 (low) to
-  26 (high)
-- `j`: A participant’s judging characteristic on a scale from 1 (low) to
-  26 (high)
-- `p`: A participant’s perceiving characteristic on a scale from 1 (low)
-  to 26 (high)
-- `posture`: Type of posture exhibited by a participant (ideal posture
-  (A), kyphosis-lordosis (B), flat-back (C), and sway-back (D))
-- `e_i`: Categorization of participant as an extrovert or introvert;
-  based on whichever score was higher on their MBTI questionnaire
-
 # 2 Exploratory Data Analysis (EDA)
 
-## 2.1 Correlation Between Features
+## 2.1 Codebook
+
+- `age`: Age of participant (in years).
+- `height`: Height of participant (in inches).
+- `weight`: Weight of participant (in pounds).
+- `sex`: Sex of the participant (male or female).
+- `activity_level`: Amount of daily physical activity performed by a
+  participant (low, moderate, or high).
+- `pain_1`: Pain in the neck reported on a scale from 0 (low) to 10
+  (high) by a participant.
+- `pain_2`: Pain in the thoracic reported on a scale from 0 (low) to 10
+  (high) by a participant.
+- `pain_3`: Pain in the lumbar reported on a scale from 0 (low) to 10
+  (high) by the participant.
+- `pain_4`: Pain in the sacrum reported on a scale from 0 (low) to 10
+  (high) by the participant.
+- `s`: A participant’s sensing characteristic on a scale from 1 (low) to
+  26 (high).
+- `i`: A participant’s intuition characteristic on a scale from 1 (low)
+  to 26 (high).
+- `t`: A participant’s thinking characteristic on a scale from 1 (low)
+  to 26 (high).
+- `f`: A participant’s feeling characteristic on a scale from 1 (low) to
+  26 (high).
+- `j`: A participant’s judging characteristic on a scale from 1 (low) to
+  26 (high).
+- `p`: A participant’s perceiving characteristic on a scale from 1 (low)
+  to 26 (high).
+- `posture`: Type of posture exhibited by a participant (ideal posture
+  (A), kyphosis-lordosis (B), flat-back (C), and sway-back (D)).
+- `e_i`: Categorization of participant as an extrovert or introvert;
+  based on whichever score was higher on their MBTI questionnaire.
+
+## 2.2 Correlation Between Features
 
 ``` r
 tmwr_cols <- colorRampPalette(c("#CA225E", "#91CBD765"))
@@ -197,7 +203,7 @@ data1 %>%
 
 <img src="predicting_personality_files/figure-gfm/correlation plot-1.png" style="display: block; margin: auto;" />
 
-## 2.2 Visual EDA
+## 2.3 Visual EDA
 
 ``` r
 data1 %>%
@@ -352,13 +358,13 @@ grid_results <- all_workflows %>%
     workflow_map(seed = 123, resamples = person_folds, grid = 10, control = grid_ctrl)
 
 grid_results %>%
-    write_rds("C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_grid.rds")
+    write_rds("predicting_personality_files/Models/tuned_grid.rds")
 ```
 
 ## 4.3 Evaluation of Models
 
 ``` r
-grid_results <- read_rds(file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_grid.rds")
+grid_results <- read_rds(file = "predicting_personality_files/Models/tuned_grid.rds")
 
 autoplot(grid_results, rank_metric = "roc_auc", metric = "roc_auc", select_best = TRUE) +
     geom_text(aes(y = mean - 0.5, label = wflow_id), angle = 90, hjust = 0.2) + ylim(0,
@@ -415,6 +421,9 @@ knn_results %>%
 ```
 
 <img src="predicting_personality_files/figure-gfm/unnamed-chunk-9-4.png" style="display: block; margin: auto;" />
+\# Final Evaluation & Concluding Remarks
+
+## 4.4 Model Evaluation on Testing Data
 
 ``` r
 final_wf <- grid_results %>%
