@@ -1,7 +1,7 @@
 ---
 title: "Posture Project"
 author: "Giovani Gutierrez"
-date: "2023-02-15"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output: 
   github_document:
     toc: true
@@ -16,7 +16,8 @@ knitr::opts_chunk$set(echo = TRUE,
                       warning = FALSE, 
                       message = FALSE,
                       tidy = TRUE,
-                      fig.align = 'center')
+                      fig.align = 'center',
+                      fig.dim = c(8, 6))
 ```
 
 # Getting Started
@@ -81,7 +82,8 @@ data1 <-
   select(-e & -i) # coerce variables into appropriate type
 
 data1 %>% 
-  vis_dat() # visualize variable types
+  vis_dat() +
+  scale_fill_brewer(palette = 'Pastel1') # visualize variable types
 
 data1 %>% 
   write.csv(file = 'Data/clean_data.csv') # write clean data to .csv file
@@ -108,7 +110,8 @@ head(data1) # preview cleaned data
 * `f`: A participant's feeling characteristic on a scale from 1 (low) to 26 (high).
 * `j`: A participant's judging characteristic on a scale from 1 (low) to 26 (high).
 * `p`: A participant's perceiving characteristic on a scale from 1 (low) to 26 (high).
-* `posture`: Type of posture exhibited by a participant (ideal posture (A), kyphosis-lordosis (B), flat-back (C), and sway-back (D)).
+* `posture`: Type of posture exhibited by a participant (ideal posture = ‘A’,
+kyphosis-lordosis = ‘B’, flat-back = ‘C’, and sway-back = ‘D’).
 * `e_i`: Categorization of participant as an extrovert or introvert; based on whichever score was higher on their MBTI questionnaire.  
 
 ## Correlation Between Features
@@ -118,6 +121,7 @@ data1 %>%
   select_if(is.numeric) %>% 
   correlate() %>% 
   rearrange() %>% 
+  shave(upper = TRUE) %>% 
   rplot(colours = c('darkorange', 'white', 'midnightblue'))
 ```
 

@@ -1,7 +1,7 @@
 Posture Project
 ================
 Giovani Gutierrez
-2023-02-15
+2023-03-13
 
 - <a href="#1-getting-started" id="toc-1-getting-started">1 Getting
   Started</a>
@@ -130,7 +130,7 @@ data1 <- data1 %>%
     select(-e & -i)  # coerce variables into appropriate type
 
 data1 %>%
-    vis_dat()  # visualize variable types
+    vis_dat() + scale_fill_brewer(palette = "Pastel1")  # visualize variable types
 ```
 
 <img src="predicting_personality_files/figure-gfm/missing values-2.png" style="display: block; margin: auto;" />
@@ -184,8 +184,8 @@ head(data1)  # preview cleaned data
   26 (high).
 - `p`: A participant’s perceiving characteristic on a scale from 1 (low)
   to 26 (high).
-- `posture`: Type of posture exhibited by a participant (ideal posture
-  (A), kyphosis-lordosis (B), flat-back (C), and sway-back (D)).
+- `posture`: Type of posture exhibited by a participant (ideal posture =
+  ‘A’, kyphosis-lordosis = ‘B’, flat-back = ‘C’, and sway-back = ‘D’).
 - `e_i`: Categorization of participant as an extrovert or introvert;
   based on whichever score was higher on their MBTI questionnaire.
 
@@ -196,6 +196,7 @@ data1 %>%
     select_if(is.numeric) %>%
     correlate() %>%
     rearrange() %>%
+    shave(upper = TRUE) %>%
     rplot(colours = c("darkorange", "white", "midnightblue"))
 ```
 
