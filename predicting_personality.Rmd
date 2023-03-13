@@ -17,10 +17,6 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE,
                       tidy = TRUE,
                       fig.align = 'center')
-
-indent1 = '    '
-indent2 = paste(rep(indent1, 2), collapse='')
-indent3 = paste(rep(indent1, 3), collapse='')
 ```
 
 # Getting Started
@@ -33,7 +29,7 @@ library(readxl)
 library(janitor)
 library(visdat)
 library(naniar)
-library(corrplot)
+library(corrr)
 library(patchwork)
 library(glmnet)
 library(kknn)
@@ -118,16 +114,11 @@ head(data1) # preview cleaned data
 ## Correlation Between Features
 
 ```{r correlation plot}
-tmwr_cols <- colorRampPalette(c('#CA225E', '#91CBD765'))
-
 data1 %>% 
   select_if(is.numeric) %>% 
-  cor() %>% 
-  corrplot(col = tmwr_cols(200), 
-           tl.col = "black",
-           method = 'circle', 
-           type = 'lower',
-           diag = FALSE)
+  correlate() %>% 
+  rearrange() %>% 
+  rplot(colours = c('darkorange', 'white', 'midnightblue'))
 ```
 
 ## Visual EDA
@@ -153,7 +144,7 @@ data1 %>%
   scale_fill_brewer(palette = "Pastel1")
 ```
 
-```{r pain-plots}
+```{r pain_plots}
 p1 <- 
   ggplot(data = data1, aes(x = posture, y = pain_1, fill = posture)) +
   geom_boxplot(color = 'black') +
@@ -193,7 +184,7 @@ p1 + p2 + p3 + p4
 
 ## Data Split & *k*-Fold Cross Validation
 
-```{r}
+```{r data-split}
 person_split <- initial_split(data = data1, prop = 0.75, strata = e_i) # initial split
 
 person_train <- training(person_split) # training set
@@ -204,7 +195,7 @@ person_folds <- vfold_cv(data = person_train, v = 10, strata = e_i) # 10-fold cr
 
 ## Recipe Building & Workflow
 
-```{r}
+```{r recipes}
 simple_rec <-
   recipe(e_i ~ ., data = person_train)
 
@@ -229,7 +220,7 @@ pca_rec <-
 ### First Recipe (`simple_rec`)
 
 #### Random Forest
-```{r}
+```{r rand_forest_spec}
 forest_spec <- rand_forest(mtry = tune(),
                            min_n = tune(),
                            trees = tune()) %>% 
@@ -242,14 +233,14 @@ forest_spec <- rand_forest(mtry = tune(),
 ### Second Recipe (`corr_rec`)
 
 #### K-Nearest Neighbors
-```{r}
+```{r knn_spec}
 knn_spec <- nearest_neighbor(neighbors = tune()) %>% 
   set_mode('classification') %>% 
   set_engine('kknn')
 ```
 
 #### Logistic Regression
-```{r}
+```{r logistic_red_spec}
 log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>% 
   set_mode('classification') %>% 
   set_engine('glmnet')
@@ -258,7 +249,7 @@ log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>%
 ### Third Recipe (`pca_rec`)
 
 #### Support Vector Machine 
-```{r}
+```{r linear_svm_spec}
 svm_spec <- svm_linear(cost = tune()) %>% 
   set_mode('classification') %>% 
   set_engine('kernlab')
@@ -267,7 +258,7 @@ svm_spec <- svm_linear(cost = tune()) %>%
 # Model Tuning & Evaluation
 
 ## Workflow Sets
-```{r}
+```{r workflow_sets}
 simple_wf <- 
   workflow_set(
     preproc = list(simple = simple_rec),
@@ -314,7 +305,7 @@ grid_results %>%
 ```
 
 ## Evaluation of Models
-```{r}
+```{r model_eval}
 grid_results <- read_rds(file = 'predicting_personality_files/Models/tuned_grid.rds')
 
 autoplot(
@@ -358,7 +349,7 @@ knn_results %>%
 # Final Evaluation & Concluding Remarks
 
 ## Model Evaluation on Testing Data
-```{r}
+```{r test_model_eval}
 final_wf <- 
   grid_results %>% 
   extract_workflow(id = 'corr_knn') %>% 

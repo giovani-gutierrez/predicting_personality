@@ -59,7 +59,7 @@ library(readxl)
 library(janitor)
 library(visdat)
 library(naniar)
-library(corrplot)
+library(corrr)
 library(patchwork)
 library(glmnet)
 library(kknn)
@@ -192,13 +192,11 @@ head(data1)  # preview cleaned data
 ## 2.2 Correlation Between Features
 
 ``` r
-tmwr_cols <- colorRampPalette(c("#CA225E", "#91CBD765"))
-
 data1 %>%
     select_if(is.numeric) %>%
-    cor() %>%
-    corrplot(col = tmwr_cols(200), tl.col = "black", method = "circle", type = "lower",
-        diag = FALSE)
+    correlate() %>%
+    rearrange() %>%
+    rplot(colours = c("darkorange", "white", "midnightblue"))
 ```
 
 <img src="predicting_personality_files/figure-gfm/correlation plot-1.png" style="display: block; margin: auto;" />
@@ -261,7 +259,7 @@ p4 <- ggplot(data = data1, aes(x = posture, y = pain_4, fill = posture)) + geom_
 p1 + p2 + p3 + p4
 ```
 
-<img src="predicting_personality_files/figure-gfm/pain-plots-1.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/pain_plots-1.png" style="display: block; margin: auto;" />
 
 # 3 Model Setup
 
@@ -371,7 +369,7 @@ autoplot(grid_results, rank_metric = "roc_auc", metric = "roc_auc", select_best 
     0.8) + theme(legend.position = "none")
 ```
 
-<img src="predicting_personality_files/figure-gfm/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/model_eval-1.png" style="display: block; margin: auto;" />
 
 ``` r
 grid_results %>%
@@ -393,7 +391,7 @@ grid_results %>%
 autoplot(grid_results, id = "corr_knn", metric = "roc_auc")
 ```
 
-<img src="predicting_personality_files/figure-gfm/unnamed-chunk-9-2.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/model_eval-2.png" style="display: block; margin: auto;" />
 
 ``` r
 best_knn <- grid_results %>%
@@ -410,7 +408,7 @@ knn_results %>%
     autoplot(type = "heatmap")
 ```
 
-<img src="predicting_personality_files/figure-gfm/unnamed-chunk-9-3.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/model_eval-3.png" style="display: block; margin: auto;" />
 
 ``` r
 knn_results %>%
@@ -420,7 +418,7 @@ knn_results %>%
     autoplot()
 ```
 
-<img src="predicting_personality_files/figure-gfm/unnamed-chunk-9-4.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/model_eval-4.png" style="display: block; margin: auto;" />
 \# Final Evaluation & Concluding Remarks
 
 ## 4.4 Model Evaluation on Testing Data
@@ -449,7 +447,7 @@ final_fit %>%
     autoplot(type = "heatmap")
 ```
 
-<img src="predicting_personality_files/figure-gfm/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/test_model_eval-1.png" style="display: block; margin: auto;" />
 
 ``` r
 final_fit %>%
@@ -458,4 +456,4 @@ final_fit %>%
     autoplot()
 ```
 
-<img src="predicting_personality_files/figure-gfm/unnamed-chunk-10-2.png" style="display: block; margin: auto;" />
+<img src="predicting_personality_files/figure-gfm/test_model_eval-2.png" style="display: block; margin: auto;" />
