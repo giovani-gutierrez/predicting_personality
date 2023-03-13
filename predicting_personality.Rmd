@@ -7,17 +7,28 @@ output:
     toc: true
     number_sections: true
     keep_html: true
+    df_print: kable
 editor_options: 
   chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
+library(htmltools)
+knitr::knit_hooks$set(imgcenter = function(before, options, envir){
+  if (before) {
+    HTML("<p align='center'>")
+  } else {
+    HTML("</p>")
+  }
+})
+
 knitr::opts_chunk$set(echo = TRUE, 
                       warning = FALSE, 
                       message = FALSE,
                       tidy = TRUE,
                       fig.align = 'center',
-                      fig.dim = c(8, 6))
+                      fig.dim = c(8, 6),
+                      imgcenter = TRUE)
 ```
 
 # Getting Started

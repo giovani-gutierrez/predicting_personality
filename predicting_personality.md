@@ -44,13 +44,18 @@ Giovani Gutierrez
     Workflow Map &amp; Tuning</a>
   - <a href="#43-evaluation-of-models" id="toc-43-evaluation-of-models">4.3
     Evaluation of Models</a>
-  - <a href="#44-model-evaluation-on-testing-data"
-    id="toc-44-model-evaluation-on-testing-data">4.4 Model Evaluation on
+- <a href="#5-final-evaluation--concluding-remarks"
+  id="toc-5-final-evaluation--concluding-remarks">5 Final Evaluation &amp;
+  Concluding Remarks</a>
+  - <a href="#51-model-evaluation-on-testing-data"
+    id="toc-51-model-evaluation-on-testing-data">5.1 Model Evaluation on
     Testing Data</a>
 
 # 1 Getting Started
 
 ## 1.1 Setup
+
+<p align="center">
 
 ``` r
 library(tidyverse)
@@ -73,7 +78,11 @@ theme_set(theme_bw())
 set.seed(123)  # set seed
 ```
 
+</p>
+
 ## 1.2 Import Data
+
+<p align="center">
 
 ``` r
 data1 <- read_xls("Data/Posture_Data.xls") %>%
@@ -85,24 +94,24 @@ data1 %>%
 head(data1)  # preview data
 ```
 
-    ## # A tibble: 6 × 66
-    ##   number_1   age height weight sex    activi…¹ pain_1 pain_2 pain_3 pain_4 mbti 
-    ##   <chr>    <dbl>  <dbl>  <dbl> <chr>  <chr>    <chr>  <chr>  <chr>  <chr>  <chr>
-    ## 1 1           53     62    125 Female Low      0      0      0      0      ESFJ 
-    ## 2 3           30     69    200 Male   High     0      0      0      0      ESTJ 
-    ## 3 5           45     63    199 Female Moderate 4      5      2      2      ENFJ 
-    ## 4 15          30     69    190 Male   Moderate 0      0      4      7      ESTP 
-    ## 5 17          59     66    138 Female Low      6      3      6      6      ESTJ 
-    ## 6 27          36     68    165 Male   High     0      2      0      0      ESTP 
-    ## # … with 55 more variables: e <chr>, i <chr>, s <chr>, n <chr>, t <chr>,
-    ## #   f <chr>, j <chr>, p <chr>, posture <chr>, number_21 <chr>, l1 <chr>,
-    ## #   l2_d <chr>, l3 <chr>, l4_d <dbl>, l5 <chr>, l6_d <dbl>, l7 <chr>,
-    ## #   l8_d <dbl>, l9 <chr>, l10_d <chr>, l11 <chr>, l12_i <dbl>, l13 <chr>,
-    ## #   l14_i <chr>, l15 <chr>, l16_i <dbl>, l17 <chr>, l18_i <dbl>, l19 <chr>,
-    ## #   l20_i <dbl>, l21 <chr>, l22_i <dbl>, l23 <chr>, l24_i <chr>, l25_i <dbl>,
-    ## #   l26 <dbl>, l27 <dbl>, l28 <dbl>, l29 <chr>, l30 <chr>, l31 <dbl>, …
+<div class="kable-table">
+
+| number_1 | age | height | weight | sex    | activity_level | pain_1 | pain_2 | pain_3 | pain_4 | mbti | e   | i   | s   | n   | t   | f   | j   | p   | posture | number_21 | l1  | l2_d               | l3  | l4_d | l5  | l6_d | l7  | l8_d | l9  | l10_d              | l11 | l12_i | l13 | l14_i               | l15 | l16_i | l17 | l18_i | l19 | l20_i | l21 | l22_i | l23 | l24_i               | l25_i |  l26 | l27 | l28 | l29 | l30                |  l31 |   l32 | l33                 | l34 | l35 |    l36 |   l37 | l38 | l39 | l40 | l41 | l42 | l43 | l44 | l45 |
+|:---------|----:|-------:|-------:|:-------|:---------------|:-------|:-------|:-------|:-------|:-----|:----|:----|:----|:----|:----|:----|:----|:----|:--------|:----------|:----|:-------------------|:----|-----:|:----|-----:|:----|-----:|:----|:-------------------|:----|------:|:----|:--------------------|:----|------:|:----|------:|:----|------:|:----|------:|:----|:--------------------|------:|-----:|----:|----:|:----|:-------------------|-----:|------:|:--------------------|----:|:----|-------:|------:|:----|:----|:----|:----|:----|:----|:----|:----|
+| 1        |  53 |     62 |    125 | Female | Low            | 0      | 0      | 0      | 0      | ESFJ | 18  | 3   | 17  | 9   | 9   | 13  | 18  | 4   | A       | 1         | A   | 4.7000000000000002 | A   |  3.3 | A   |  5.3 | P   |  2.6 | A   | 12.0               | A   |   1.3 | A   | 0.90000000000000002 | A   |   0.0 | A   |   0.5 | P   |   0.5 | L   |   0.5 | A   | 0.59999999999999998 |   0.8 | 10.1 | 0.4 | 0.4 | P   | 56.100000000000001 | 12.6 |  72.3 | 0.29999999999999999 | 2.1 | P   | 364.10 |  81.8 | NA  | NA  | NA  | NA  | NA  | NA  | NA  | NA  |
+| 3        |  30 |     69 |    200 | Male   | High           | 0      | 0      | 0      | 0      | ESTJ | 15  | 6   | 16  | 10  | 15  | 9   | 12  | 10  | A       | 3         | A   | 27.300000000000001 | P   |  5.2 | P   |  0.3 | A   |  3.8 | A   | 12                 | A   |   2.7 | A   | 0.0                 | A   |   1.4 | A   |   0.9 | A   |   1.0 | NA  |   0.0 | A   | 0.69999999999999996 |   0.7 | 16.2 | 2.7 | 4.9 | P   | 194.80000000000001 | 43.8 | 115.6 | 0.10000000000000001 | 1.2 | A   | 537.60 | 120.8 | X   | NA  | NA  | NA  | NA  | NA  | NA  | NA  |
+| 5        |  45 |     63 |    199 | Female | Moderate       | 4      | 5      | 2      | 2      | ENFJ | 14  | 7   | 20  | 6   | 9   | 15  | 16  | 6   | A       | 5         | A   | 2.5                | A   |  2.0 | A   |  2.6 | A   |  1.4 | A   | 20.100000000000001 | A   |   1.0 | A   | 0.90000000000000002 | A   |   0.3 | A   |   1.0 | A   |   0.3 | NA  |   0.0 | A   | 0.80000000000000004 |   0.8 | 16.1 | 0.2 | 0.3 | P   | 79.900000000000006 | 18.0 | 115.0 | 0                   | 0.4 | A   | 520.10 | 116.9 | NA  | NA  | NA  | NA  | NA  | X   | X   | X   |
+| 15       |  30 |     69 |    190 | Male   | Moderate       | 0      | 0      | 4      | 7      | ESTP | 20  | 1   | 22  | 4   | 13  | 11  | 7   | 15  | A       | 16        | A   | 8.5                | A   |  4.0 | A   |  2.0 | P   |  1.5 | A   | 15.300000000000001 | A   |   1.8 | A   | 1.1000000000000001  | P   |   0.0 | A   |   0.1 | P   |   0.3 | L   |   0.1 | A   | 0.5                 |   0.5 | 15.4 | 0.7 | 1.1 | P   | 96.090000000000003 | 21.8 | 109.8 | 0.59999999999999998 | 7.4 | P   | 637.10 | 143.2 | NA  | NA  | NA  | NA  | NA  | NA  | NA  | NA  |
+| 17       |  59 |     66 |    138 | Female | Low            | 6      | 3      | 6      | 6      | ESTJ | 12  | 9   | 18  | 8   | 14  | 10  | 20  | 2   | A       | 19        | A   | 0.5                | P   |  1.1 | A   |  0.3 | A   |  4.0 | A   | 12.1               | A   |   0.4 | A   | 0.40000000000000002 | A   |   0.7 | A   |   1.0 | A   |   0.9 | L   |   0.5 | A   | 0.59999999999999998 |   0.8 | 11.2 | 0.0 | 0.1 | P   | 51.100000000000001 | 11.5 |  79.8 | 0.29999999999999999 | 2.9 | A   | 412.00 |  92.6 | NA  | NA  | NA  | NA  | NA  | NA  | NA  | NA  |
+| 27       |  36 |     68 |    165 | Male   | High           | 0      | 2      | 0      | 0      | ESTP | 16  | 5   | 20  | 6   | 15  | 9   | 7   | 15  | A       | 29        | A   | 14                 | P   |  2.6 | A   |  1.6 | A   |  1.0 | A   | 14.199999999999999 | A   |   1.2 | P   | 0.10000000000000001 | A   |   0.6 | A   |   0.6 | A   |   0.2 | L   |   0.2 | A   | 0.40000000000000002 |   0.4 | 13.4 | 1.3 | 1.9 | P   | 107.59999999999999 | 24.2 |  95.4 | 0.20000000000000001 | 2.3 | A   | 469.05 | 105.5 | X   | NA  | NA  | NA  | NA  | NA  | NA  | NA  |
+
+</div>
+
+</p>
 
 ## 1.3 Tidy Data & Missing Values
+
+<p align="center">
 
 ``` r
 data1 <- data1 %>%
@@ -142,17 +151,20 @@ data1 %>%
 head(data1)  # preview cleaned data
 ```
 
-    ## # A tibble: 6 × 17
-    ##     age height weight sex    activity_…¹ pain_1 pain_2 pain_3 pain_4     s     n
-    ##   <dbl>  <dbl>  <dbl> <fct>  <ord>        <dbl>  <dbl>  <dbl>  <dbl> <dbl> <dbl>
-    ## 1    53     62    125 Female Low              0      0      0      0    17     9
-    ## 2    30     69    200 Male   High             0      0      0      0    16    10
-    ## 3    45     63    199 Female Moderate         4      5      2      2    20     6
-    ## 4    30     69    190 Male   Moderate         0      0      4      7    22     4
-    ## 5    59     66    138 Female Low              6      3      6      6    18     8
-    ## 6    36     68    165 Male   High             0      2      0      0    20     6
-    ## # … with 6 more variables: t <dbl>, f <dbl>, j <dbl>, p <dbl>, posture <fct>,
-    ## #   e_i <fct>, and abbreviated variable name ¹​activity_level
+<div class="kable-table">
+
+| age | height | weight | sex    | activity_level | pain_1 | pain_2 | pain_3 | pain_4 |   s |   n |   t |   f |   j |   p | posture | e_i       |
+|----:|-------:|-------:|:-------|:---------------|-------:|-------:|-------:|-------:|----:|----:|----:|----:|----:|----:|:--------|:----------|
+|  53 |     62 |    125 | Female | Low            |      0 |      0 |      0 |      0 |  17 |   9 |   9 |  13 |  18 |   4 | A       | Introvert |
+|  30 |     69 |    200 | Male   | High           |      0 |      0 |      0 |      0 |  16 |  10 |  15 |   9 |  12 |  10 | A       | Introvert |
+|  45 |     63 |    199 | Female | Moderate       |      4 |      5 |      2 |      2 |  20 |   6 |   9 |  15 |  16 |   6 | A       | Introvert |
+|  30 |     69 |    190 | Male   | Moderate       |      0 |      0 |      4 |      7 |  22 |   4 |  13 |  11 |   7 |  15 | A       | Extrovert |
+|  59 |     66 |    138 | Female | Low            |      6 |      3 |      6 |      6 |  18 |   8 |  14 |  10 |  20 |   2 | A       | Introvert |
+|  36 |     68 |    165 | Male   | High           |      0 |      2 |      0 |      0 |  20 |   6 |  15 |   9 |   7 |  15 | A       | Introvert |
+
+</div>
+
+</p>
 
 # 2 Exploratory Data Analysis (EDA)
 
@@ -191,6 +203,8 @@ head(data1)  # preview cleaned data
 
 ## 2.2 Correlation Between Features
 
+<p align="center">
+
 ``` r
 data1 %>%
     select_if(is.numeric) %>%
@@ -202,7 +216,11 @@ data1 %>%
 
 <img src="predicting_personality_files/figure-gfm/correlation plot-1.png" style="display: block; margin: auto;" />
 
+</p>
+
 ## 2.3 Visual EDA
+
+<p align="center">
 
 ``` r
 data1 %>%
@@ -236,6 +254,9 @@ data1 %>%
 
 <img src="predicting_personality_files/figure-gfm/pairs plots-4.png" style="display: block; margin: auto;" />
 
+</p>
+<p align="center">
+
 ``` r
 p1 <- ggplot(data = data1, aes(x = posture, y = pain_1, fill = posture)) + geom_boxplot(color = "black") +
     stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
@@ -262,9 +283,13 @@ p1 + p2 + p3 + p4
 
 <img src="predicting_personality_files/figure-gfm/pain_plots-1.png" style="display: block; margin: auto;" />
 
+</p>
+
 # 3 Model Setup
 
 ## 3.1 Data Split & *k*-Fold Cross Validation
+
+<p align="center">
 
 ``` r
 person_split <- initial_split(data = data1, prop = 0.75, strata = e_i)  # initial split
@@ -275,7 +300,11 @@ person_test <- testing(person_split)  # testing set
 person_folds <- vfold_cv(data = person_train, v = 10, strata = e_i)  # 10-fold cross validation
 ```
 
+</p>
+
 ## 3.2 Recipe Building & Workflow
+
+<p align="center">
 
 ``` r
 simple_rec <- recipe(e_i ~ ., data = person_train)
@@ -292,11 +321,15 @@ pca_rec <- simple_rec %>%
     step_pca(all_numeric_predictors(), num_comp = tune())
 ```
 
+</p>
+
 ## 3.3 Model Specifications
 
 ### 3.3.1 First Recipe (`simple_rec`)
 
 #### 3.3.1.1 Random Forest
+
+<p align="center">
 
 ``` r
 forest_spec <- rand_forest(mtry = tune(), min_n = tune(), trees = tune()) %>%
@@ -304,9 +337,13 @@ forest_spec <- rand_forest(mtry = tune(), min_n = tune(), trees = tune()) %>%
     set_engine("ranger", importance = "impurity")
 ```
 
+</p>
+
 ### 3.3.2 Second Recipe (`corr_rec`)
 
 #### 3.3.2.1 K-Nearest Neighbors
+
+<p align="center">
 
 ``` r
 knn_spec <- nearest_neighbor(neighbors = tune()) %>%
@@ -314,7 +351,11 @@ knn_spec <- nearest_neighbor(neighbors = tune()) %>%
     set_engine("kknn")
 ```
 
+</p>
+
 #### 3.3.2.2 Logistic Regression
+
+<p align="center">
 
 ``` r
 log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>%
@@ -322,9 +363,13 @@ log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>%
     set_engine("glmnet")
 ```
 
+</p>
+
 ### 3.3.3 Third Recipe (`pca_rec`)
 
 #### 3.3.3.1 Support Vector Machine
+
+<p align="center">
 
 ``` r
 svm_spec <- svm_linear(cost = tune()) %>%
@@ -332,9 +377,13 @@ svm_spec <- svm_linear(cost = tune()) %>%
     set_engine("kernlab")
 ```
 
+</p>
+
 # 4 Model Tuning & Evaluation
 
 ## 4.1 Workflow Sets
+
+<p align="center">
 
 ``` r
 simple_wf <- workflow_set(preproc = list(simple = simple_rec), models = list(random_forest = forest_spec))
@@ -346,7 +395,11 @@ pca_wf <- workflow_set(preproc = list(pca = pca_rec), models = list(log_reg = lo
     svm = svm_spec))
 ```
 
+</p>
+
 ## 4.2 Workflow Map & Tuning
+
+<p align="center">
 
 ``` r
 all_workflows <- bind_rows(simple_wf, corr_wf, pca_wf)
@@ -360,7 +413,11 @@ grid_results %>%
     write_rds("predicting_personality_files/Models/tuned_grid.rds")
 ```
 
+</p>
+
 ## 4.3 Evaluation of Models
+
+<p align="center">
 
 ``` r
 grid_results <- read_rds(file = "predicting_personality_files/Models/tuned_grid.rds")
@@ -379,14 +436,17 @@ grid_results %>%
     select(wflow_id, .config, roc_auc = mean, rank)
 ```
 
-    ## # A tibble: 5 × 4
-    ##   wflow_id             .config               roc_auc  rank
-    ##   <chr>                <chr>                   <dbl> <int>
-    ## 1 corr_knn             Preprocessor08_Model1   0.594     1
-    ## 2 pca_svm              Preprocessor1_Model2    0.568     2
-    ## 3 pca_log_reg          Preprocessor2_Model2    0.564     3
-    ## 4 corr_log_reg         Preprocessor02_Model1   0.553     4
-    ## 5 simple_random_forest Preprocessor1_Model05   0.511     5
+<div class="kable-table">
+
+| wflow_id             | .config               |   roc_auc | rank |
+|:---------------------|:----------------------|----------:|-----:|
+| corr_knn             | Preprocessor08_Model1 | 0.5937500 |    1 |
+| pca_svm              | Preprocessor1_Model2  | 0.5680556 |    2 |
+| pca_log_reg          | Preprocessor2_Model2  | 0.5638889 |    3 |
+| corr_log_reg         | Preprocessor02_Model1 | 0.5527778 |    4 |
+| simple_random_forest | Preprocessor1_Model05 | 0.5111111 |    5 |
+
+</div>
 
 ``` r
 autoplot(grid_results, id = "corr_knn", metric = "roc_auc")
@@ -420,9 +480,14 @@ knn_results %>%
 ```
 
 <img src="predicting_personality_files/figure-gfm/model_eval-4.png" style="display: block; margin: auto;" />
-\# Final Evaluation & Concluding Remarks
 
-## 4.4 Model Evaluation on Testing Data
+</p>
+
+# 5 Final Evaluation & Concluding Remarks
+
+## 5.1 Model Evaluation on Testing Data
+
+<p align="center">
 
 ``` r
 final_wf <- grid_results %>%
@@ -435,11 +500,14 @@ final_fit %>%
     collect_metrics()
 ```
 
-    ## # A tibble: 2 × 4
-    ##   .metric  .estimator .estimate .config             
-    ##   <chr>    <chr>          <dbl> <chr>               
-    ## 1 accuracy binary         0.6   Preprocessor1_Model1
-    ## 2 roc_auc  binary         0.554 Preprocessor1_Model1
+<div class="kable-table">
+
+| .metric  | .estimator | .estimate | .config              |
+|:---------|:-----------|----------:|:---------------------|
+| accuracy | binary     | 0.6000000 | Preprocessor1_Model1 |
+| roc_auc  | binary     | 0.5544872 | Preprocessor1_Model1 |
+
+</div>
 
 ``` r
 final_fit %>%
@@ -458,3 +526,5 @@ final_fit %>%
 ```
 
 <img src="predicting_personality_files/figure-gfm/test_model_eval-2.png" style="display: block; margin: auto;" />
+
+</p>
