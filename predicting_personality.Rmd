@@ -13,22 +13,12 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-library(htmltools)
-knitr::knit_hooks$set(imgcenter = function(before, options, envir){
-  if (before) {
-    HTML("<p align='center'>")
-  } else {
-    HTML("</p>")
-  }
-})
-
 knitr::opts_chunk$set(echo = TRUE, 
                       warning = FALSE, 
                       message = FALSE,
                       tidy = TRUE,
                       fig.align = 'center',
-                      fig.dim = c(8, 6),
-                      imgcenter = TRUE)
+                      fig.dim = c(8, 6))
 ```
 
 # Getting Started
@@ -232,9 +222,7 @@ pca_rec <-
 
 ## Model Specifications
 
-### First Recipe (`simple_rec`)
-
-#### Random Forest
+### Random Forest
 ```{r rand_forest_spec}
 forest_spec <- rand_forest(mtry = tune(),
                            min_n = tune(),
@@ -244,26 +232,21 @@ forest_spec <- rand_forest(mtry = tune(),
              importance = 'impurity')
 ```
 
-
-### Second Recipe (`corr_rec`)
-
-#### K-Nearest Neighbors
+### K-Nearest Neighbors
 ```{r knn_spec}
 knn_spec <- nearest_neighbor(neighbors = tune()) %>% 
   set_mode('classification') %>% 
   set_engine('kknn')
 ```
 
-#### Logistic Regression
+### Logistic Regression
 ```{r logistic_red_spec}
 log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>% 
   set_mode('classification') %>% 
   set_engine('glmnet')
 ```
 
-### Third Recipe (`pca_rec`)
-
-#### Support Vector Machine 
+### Support Vector Machine 
 ```{r linear_svm_spec}
 svm_spec <- svm_linear(cost = tune()) %>% 
   set_mode('classification') %>% 
@@ -361,6 +344,7 @@ knn_results %>%
   roc_curve(truth = e_i, estimate = .pred_Extrovert) %>% 
   autoplot()
 ```
+
 # Final Evaluation & Concluding Remarks
 
 ## Model Evaluation on Testing Data

@@ -1,7 +1,7 @@
 Posture Project
 ================
 Giovani Gutierrez
-2023-03-13
+2023-03-16
 
 - <a href="#1-getting-started" id="toc-1-getting-started">1 Getting
   Started</a>
@@ -27,15 +27,14 @@ Giovani Gutierrez
     Workflow</a>
   - <a href="#33-model-specifications" id="toc-33-model-specifications">3.3
     Model Specifications</a>
-    - <a href="#331-first-recipe-simple_rec"
-      id="toc-331-first-recipe-simple_rec">3.3.1 First Recipe
-      (<code>simple_rec</code>)</a>
-    - <a href="#332-second-recipe-corr_rec"
-      id="toc-332-second-recipe-corr_rec">3.3.2 Second Recipe
-      (<code>corr_rec</code>)</a>
-    - <a href="#333-third-recipe-pca_rec"
-      id="toc-333-third-recipe-pca_rec">3.3.3 Third Recipe
-      (<code>pca_rec</code>)</a>
+    - <a href="#331-random-forest" id="toc-331-random-forest">3.3.1 Random
+      Forest</a>
+    - <a href="#332-k-nearest-neighbors"
+      id="toc-332-k-nearest-neighbors">3.3.2 K-Nearest Neighbors</a>
+    - <a href="#333-logistic-regression"
+      id="toc-333-logistic-regression">3.3.3 Logistic Regression</a>
+    - <a href="#334-support-vector-machine"
+      id="toc-334-support-vector-machine">3.3.4 Support Vector Machine</a>
 - <a href="#4-model-tuning--evaluation"
   id="toc-4-model-tuning--evaluation">4 Model Tuning &amp; Evaluation</a>
   - <a href="#41-workflow-sets" id="toc-41-workflow-sets">4.1 Workflow
@@ -54,8 +53,6 @@ Giovani Gutierrez
 # 1 Getting Started
 
 ## 1.1 Setup
-
-<p align="center">
 
 ``` r
 library(tidyverse)
@@ -78,11 +75,7 @@ theme_set(theme_bw())
 set.seed(123)  # set seed
 ```
 
-</p>
-
 ## 1.2 Import Data
-
-<p align="center">
 
 ``` r
 data1 <- read_xls("Data/Posture_Data.xls") %>%
@@ -107,11 +100,7 @@ head(data1)  # preview data
 
 </div>
 
-</p>
-
 ## 1.3 Tidy Data & Missing Values
-
-<p align="center">
 
 ``` r
 data1 <- data1 %>%
@@ -164,8 +153,6 @@ head(data1)  # preview cleaned data
 
 </div>
 
-</p>
-
 # 2 Exploratory Data Analysis (EDA)
 
 ## 2.1 Codebook
@@ -203,8 +190,6 @@ head(data1)  # preview cleaned data
 
 ## 2.2 Correlation Between Features
 
-<p align="center">
-
 ``` r
 data1 %>%
     select_if(is.numeric) %>%
@@ -216,11 +201,7 @@ data1 %>%
 
 <img src="predicting_personality_files/figure-gfm/correlation plot-1.png" style="display: block; margin: auto;" />
 
-</p>
-
 ## 2.3 Visual EDA
-
-<p align="center">
 
 ``` r
 data1 %>%
@@ -254,9 +235,6 @@ data1 %>%
 
 <img src="predicting_personality_files/figure-gfm/pairs plots-4.png" style="display: block; margin: auto;" />
 
-</p>
-<p align="center">
-
 ``` r
 p1 <- ggplot(data = data1, aes(x = posture, y = pain_1, fill = posture)) + geom_boxplot(color = "black") +
     stat_summary(fun.y = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
@@ -283,13 +261,9 @@ p1 + p2 + p3 + p4
 
 <img src="predicting_personality_files/figure-gfm/pain_plots-1.png" style="display: block; margin: auto;" />
 
-</p>
-
 # 3 Model Setup
 
 ## 3.1 Data Split & *k*-Fold Cross Validation
-
-<p align="center">
 
 ``` r
 person_split <- initial_split(data = data1, prop = 0.75, strata = e_i)  # initial split
@@ -300,11 +274,7 @@ person_test <- testing(person_split)  # testing set
 person_folds <- vfold_cv(data = person_train, v = 10, strata = e_i)  # 10-fold cross validation
 ```
 
-</p>
-
 ## 3.2 Recipe Building & Workflow
-
-<p align="center">
 
 ``` r
 simple_rec <- recipe(e_i ~ ., data = person_train)
@@ -321,15 +291,9 @@ pca_rec <- simple_rec %>%
     step_pca(all_numeric_predictors(), num_comp = tune())
 ```
 
-</p>
-
 ## 3.3 Model Specifications
 
-### 3.3.1 First Recipe (`simple_rec`)
-
-#### 3.3.1.1 Random Forest
-
-<p align="center">
+### 3.3.1 Random Forest
 
 ``` r
 forest_spec <- rand_forest(mtry = tune(), min_n = tune(), trees = tune()) %>%
@@ -337,13 +301,7 @@ forest_spec <- rand_forest(mtry = tune(), min_n = tune(), trees = tune()) %>%
     set_engine("ranger", importance = "impurity")
 ```
 
-</p>
-
-### 3.3.2 Second Recipe (`corr_rec`)
-
-#### 3.3.2.1 K-Nearest Neighbors
-
-<p align="center">
+### 3.3.2 K-Nearest Neighbors
 
 ``` r
 knn_spec <- nearest_neighbor(neighbors = tune()) %>%
@@ -351,11 +309,7 @@ knn_spec <- nearest_neighbor(neighbors = tune()) %>%
     set_engine("kknn")
 ```
 
-</p>
-
-#### 3.3.2.2 Logistic Regression
-
-<p align="center">
+### 3.3.3 Logistic Regression
 
 ``` r
 log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>%
@@ -363,13 +317,7 @@ log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>%
     set_engine("glmnet")
 ```
 
-</p>
-
-### 3.3.3 Third Recipe (`pca_rec`)
-
-#### 3.3.3.1 Support Vector Machine
-
-<p align="center">
+### 3.3.4 Support Vector Machine
 
 ``` r
 svm_spec <- svm_linear(cost = tune()) %>%
@@ -377,13 +325,9 @@ svm_spec <- svm_linear(cost = tune()) %>%
     set_engine("kernlab")
 ```
 
-</p>
-
 # 4 Model Tuning & Evaluation
 
 ## 4.1 Workflow Sets
-
-<p align="center">
 
 ``` r
 simple_wf <- workflow_set(preproc = list(simple = simple_rec), models = list(random_forest = forest_spec))
@@ -395,11 +339,7 @@ pca_wf <- workflow_set(preproc = list(pca = pca_rec), models = list(log_reg = lo
     svm = svm_spec))
 ```
 
-</p>
-
 ## 4.2 Workflow Map & Tuning
-
-<p align="center">
 
 ``` r
 all_workflows <- bind_rows(simple_wf, corr_wf, pca_wf)
@@ -413,11 +353,7 @@ grid_results %>%
     write_rds("predicting_personality_files/Models/tuned_grid.rds")
 ```
 
-</p>
-
 ## 4.3 Evaluation of Models
-
-<p align="center">
 
 ``` r
 grid_results <- read_rds(file = "predicting_personality_files/Models/tuned_grid.rds")
@@ -481,13 +417,9 @@ knn_results %>%
 
 <img src="predicting_personality_files/figure-gfm/model_eval-4.png" style="display: block; margin: auto;" />
 
-</p>
-
 # 5 Final Evaluation & Concluding Remarks
 
 ## 5.1 Model Evaluation on Testing Data
-
-<p align="center">
 
 ``` r
 final_wf <- grid_results %>%
@@ -526,5 +458,3 @@ final_fit %>%
 ```
 
 <img src="predicting_personality_files/figure-gfm/test_model_eval-2.png" style="display: block; margin: auto;" />
-
-</p>
