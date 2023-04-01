@@ -1,7 +1,7 @@
 Posture Project
 ================
 Giovani Gutierrez
-2023-03-19
+2023-03-31
 
 - <a href="#1-introduction" id="toc-1-introduction">1 Introduction</a>
   - <a href="#11-the-goal" id="toc-11-the-goal">1.1 The Goal</a>
@@ -362,7 +362,9 @@ Note that there is strong negative correlation between variables `f` and
 `t`, `j` and `p`, and `n` and `s`. This makes sense! For example, if a
 participant has a high feeling `f` score, they will have a lower
 thinking `t` score. Similarly for the other negatively correlated
-variables.
+variables. These correlated variables may cause issues in our model.
+These can be combated using multiple methods such as a correlation
+filter or using Principal Components Analysis (PCA).
 
 ## 3.3 Visual EDA
 
@@ -405,7 +407,26 @@ data1 %>%
 
 <img src="predicting_personality_files/figure-gfm/pairs plots-4.png" style="display: block; margin: auto;" />
 
-Here we make a boxplot for each type of pain. Each boxplot compares the
+While not every single plot in a pairs plot may be useful, most plots
+are. The first matrix of plots shows us that the number of extroverts
+and introverts in our data are fairly equal. Also, the distribution of
+age, weight, and height among extroverts and introverts are fairly
+similar.
+
+The second matrix of plots shows us the distribution of each type of
+pain among extroverts and introverts. While similar, introverts seem to
+have a higher median of `pain_1`, `pain_2`, and `pain_4`.
+
+The third matrix of plots shows us the distribution of posture types
+among extrovert and introverts. While similar, more introverts seem to
+have the ideal posture type compared to extroverts.
+
+Finally, the fourth matrix of plots aids in determining how each
+personality characteristic correlates with other characteristics. As
+seen before, there is high absolute correlation among some of these
+predictors.
+
+Next, we make a boxplot for each type of pain. Each boxplot compares the
 distribution of a type of pain among the four posture types. The average
 values have been marked with a diamond to aid in interpretation:
 
@@ -522,6 +543,13 @@ an engine and any tunable hyper-parameters:
 
 ### 4.3.1 Random Forest
 
+Here we specify a random forest model using the ‘ranger’ engine. For
+this specification, we will tune `mtry` (the number of randomly selected
+predictors), `trees` (the number of trees), and `min_n` (the minimal
+node size). We also set importance to the ‘impurity’ measure which is
+the [Gini
+index](https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity).
+
 ``` r
 forest_spec <- rand_forest(mtry = tune(), min_n = tune(), trees = tune()) %>%
     set_mode("classification") %>%
@@ -529,6 +557,10 @@ forest_spec <- rand_forest(mtry = tune(), min_n = tune(), trees = tune()) %>%
 ```
 
 ### 4.3.2 K-Nearest Neighbors
+
+Here we specify a K-nearest neighbors model using the ‘kknn’ engine. For
+this specification, we will tune the number of nearest neighbors
+`negihbors`.
 
 ``` r
 knn_spec <- nearest_neighbor(neighbors = tune()) %>%
@@ -538,6 +570,10 @@ knn_spec <- nearest_neighbor(neighbors = tune()) %>%
 
 ### 4.3.3 Elastic-Net Logistic Regression
 
+Here we specify an elastic-net logistic regression model using the
+‘glmnet’ engine. For this specification, we will tune the amount of
+regularization `penalty` and the proportion of Lasso penalty `mixture`.
+
 ``` r
 log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>%
     set_mode("classification") %>%
@@ -545,6 +581,9 @@ log_spec <- logistic_reg(penalty = tune(), mixture = tune()) %>%
 ```
 
 ### 4.3.4 Linear Support Vector Machines
+
+Here we specify a linear support verctor machine via the ‘kernlab’
+engine. For this specification, we tune the cost hyper-parameter `cost`.
 
 ``` r
 svm_spec <- svm_linear(cost = tune()) %>%
@@ -556,11 +595,11 @@ svm_spec <- svm_linear(cost = tune()) %>%
 
 ## 5.1 Workflow Sets
 
-Here we specify a workflow set for each of the three recipes. Each
-workflow set contains a pre-processor (the recipe) and the models to be
-used with that pre-processor. Recall that not every model specification
-will be used with each recipe. Provided is a table to aid in
-interpreting which models will be used with each recipe:
+We specify a workflow set for each of the three recipes. Each workflow
+set contains a pre-processor (the recipe) and the models to be used with
+that pre-processor. Recall that not every model specification will be
+used with each recipe. Provided is a table to aid in interpreting which
+models will be used with each recipe:
 
 <center>
 
