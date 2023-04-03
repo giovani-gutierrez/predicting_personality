@@ -1,7 +1,6 @@
-Posture Project
+Predicting Personality: Introvert or Extrovert?
 ================
 Giovani Gutierrez
-2023-03-31
 
 - <a href="#1-introduction" id="toc-1-introduction">1 Introduction</a>
   - <a href="#11-the-goal" id="toc-11-the-goal">1.1 The Goal</a>
@@ -178,11 +177,15 @@ have saved the raw data as a .csv file to more easily view and import
 the data, if needed. Now, let’s preview our data to see what we have.
 
 ``` r
-data1 <- read_xls("Data/Posture_Data.xls") %>%
+data1 <- read_xls(
+    "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/Posture_Data.xls"
+) %>%
     clean_names()  # read in raw data from .xls file
 
 data1 %>%
-    write.csv(file = "Data/raw_data.csv")  # write raw data to .csv file
+    write.csv(
+        file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/raw_data.csv"
+    )  # write raw data to .csv file
 
 head(data1)  # preview data
 ```
@@ -287,7 +290,9 @@ tidied data:
 
 ``` r
 data1 %>%
-    write.csv(file = "Data/clean_data.csv")  # write clean data to .csv file
+    write.csv(
+        file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/clean_data.csv"
+    )  # write clean data to .csv file
 
 head(data1)  # preview tidied data
 ```
@@ -673,7 +678,9 @@ Approximate confidence intervals are also shown. We also generate a
 table which shows similar results:
 
 ``` r
-grid_results <- read_rds(file = "predicting_personality_files/Models/tuned_grid.rds")
+grid_results <- read_rds(
+    file = "C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_grid.rds"
+)
 
 autoplot(grid_results, rank_metric = "roc_auc", metric = "roc_auc", select_best = TRUE) +
     geom_text(

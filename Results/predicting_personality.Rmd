@@ -1,7 +1,6 @@
 ---
-title: "Posture Project"
+title: "Predicting Personality: Introvert or Extrovert?"
 author: "Giovani Gutierrez"
-date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output: 
   github_document:
     toc: true
@@ -81,11 +80,11 @@ Our data, from the study, comes in a .xls format. We read in the data using `rea
 
 ```{r read-in data}
 data1 <- 
-  read_xls('Data/Posture_Data.xls') %>% 
+  read_xls('C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/Posture_Data.xls') %>% 
   clean_names() # read in raw data from .xls file
 
 data1 %>% 
-  write.csv(file = 'Data/raw_data.csv') # write raw data to .csv file
+  write.csv(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/raw_data.csv') # write raw data to .csv file
 
 head(data1) # preview data
 dim(data1) # number of rows & columns
@@ -143,7 +142,7 @@ We'll write our tidied data to a .csv file. Let's also preview our tidied data:
 
 ```{r}
 data1 %>% 
-  write.csv(file = 'Data/clean_data.csv') # write clean data to .csv file
+  write.csv(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/Data/clean_data.csv') # write clean data to .csv file
 
 head(data1) # preview tidied data
 ```
@@ -431,7 +430,7 @@ grid_results %>%
 Let's read in our results from our .rds file! We generate a plot which ranks each model and pre-processor combination according to the (estimated) area under the ROC (receiver operator characteristic) curve. Approximate confidence intervals are also shown. We also generate a table which shows similar results:
 
 ```{r model_eval}
-grid_results <- read_rds(file = 'predicting_personality_files/Models/tuned_grid.rds')
+grid_results <- read_rds(file = 'C:/Users/giova/Desktop/PSTAT 131/predicting_personality/predicting_personality_files/Models/tuned_grid.rds')
 
 autoplot(
    grid_results,
