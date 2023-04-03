@@ -12,8 +12,7 @@ The data used is from a [study](https://journals.plos.org/plosone/article?id=10.
 | Directory     | Description   |
 | ------------- | ------------- |
 | /Data     | Contains codebook, raw data (both in original and .csv formats), & cleaned/tidied data. |
-| /Results     | Contains R markdown (.Rmd) file & final report (.md format).      |
-| /predicting-personality-files | Contains image, model, & figure directories.      |
+| /predicting-personality-files/Results     | Contains R markdown (.Rmd) file & final report (.md format).      |
 | /predicting-personality-files/Images | Contains images used in final report.      |
 | /predicting-personality-files/Models | Contains .rds file of regular tuned grid used for the models.     |
 | /predicting-personality-files/figues-gfm | Contains figures such as charts and graphs.    |
