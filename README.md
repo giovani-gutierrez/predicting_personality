@@ -1,7 +1,5 @@
 # Predicting Personality: Introvert or Extrovert?
 
-Please visit [this website](https://giovani-gutierrez.github.io/projects/personality.html) for a much nicer looking final report!
-
 ## Description 
 
 In this project, I use statistical/machine supervised learning methods to classify participants as either introverts or extroverts based on multiple features such as age, sex, posture type, and other measured personality traits.
